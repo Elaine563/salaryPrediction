@@ -4,17 +4,14 @@ import pickle
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
-# ==================== PAGE CONFIG ==================== #
+
 st.set_page_config(
     page_title="AI/ML Salary Prediction",
     page_icon="💼",
     layout="wide"
 )
 
-# ==================== LOAD DATA ==================== #
 df = pd.read_csv("ai_job_dataset.csv")
-
-# ==================== LOAD MODEL & ENCODERS ==================== #
 try:
     with open("salary_predictor.pkl", "rb") as f:
         model = pickle.load(f)
@@ -44,33 +41,26 @@ st.divider()
 st.subheader("🔍 Enter Job & Company Details")
 
 job_title = st.selectbox("Job Title", sorted(df["job_title"].unique()))
-salary_currency = st.selectbox("Salary Currency", sorted(df["salary_currency"].unique()))
 experience_level = st.selectbox("Experience Level", sorted(df["experience_level"].unique()))
 employment_type = st.selectbox("Employment Type", sorted(df["employment_type"].unique()))
 company_location = st.selectbox("Company Location", sorted(df["company_location"].unique()))
 company_size = st.selectbox("Company Size", sorted(df["company_size"].unique()))
-employee_residence = st.selectbox("Employee Residence", sorted(df["employee_residence"].unique()))
-required_skills = st.selectbox("Required Skills", sorted(df["required_skills"].unique()))
 education_required = st.selectbox("Education Required", sorted(df["education_required"].unique()))
-
 years_experience = st.slider("Years of Experience", min_value=0, max_value=30, value=5)
 
 st.divider()
 
 # ==================== ENCODING FUNCTION ==================== #
-def encode_input(job_title, salary_currency, experience_level, employment_type,
-                 company_location, company_size, employee_residence, required_skills,
+def encode_input(job_title, experience_level, employment_type,
+                 company_location, company_size,
                  education_required, years_experience):
 
     input_data = pd.DataFrame({
         "job_title": [job_title],
-        "salary_currency": [salary_currency],
         "experience_level": [experience_level],
         "employment_type": [employment_type],
         "company_location": [company_location],
         "company_size": [company_size],
-        "employee_residence": [employee_residence],
-        "required_skills": [required_skills],
         "education_required": [education_required],
         "years_experience": [years_experience]
     })
@@ -89,9 +79,8 @@ def encode_input(job_title, salary_currency, experience_level, employment_type,
 if st.button("🚀 Predict Salary"):
     try:
         input_encoded = encode_input(
-            job_title, salary_currency, experience_level, employment_type,
-            company_location, company_size, employee_residence,
-            required_skills, education_required, years_experience
+            job_title, experience_level, employment_type,
+            company_location, company_size, education_required, years_experience
         )
 
         prediction_log = model.predict(input_encoded)[0]  # Model trained on log(salary)
