@@ -12,6 +12,7 @@ st.set_page_config(
 )
 
 df = pd.read_csv("ai_job_dataset.csv")
+
 try:
     with open("salary_predictor.pkl", "rb") as f:
         model = pickle.load(f)
@@ -31,8 +32,8 @@ except Exception as e:
 # ==================== PAGE INTRO ==================== #
 st.title("💼 AI/ML Salary Prediction System")
 st.write("""
-This app predicts **AI/ML professional salaries** using a trained **CatBoost Regressor model**.
-Select job details below to get an estimated salary.
+This app predicts **AI/ML professional salaries** using a trained **CatBoost Regressor model**.  
+Select job details below to get an estimated salary prediction.
 """)
 
 st.divider()
@@ -40,12 +41,12 @@ st.divider()
 # ==================== INPUT SECTION ==================== #
 st.subheader("🔍 Enter Job & Company Details")
 
-job_title = st.selectbox("Job Title", sorted(df["job_title"].unique()))
-experience_level = st.selectbox("Experience Level", sorted(df["experience_level"].unique()))
-employment_type = st.selectbox("Employment Type", sorted(df["employment_type"].unique()))
-company_location = st.selectbox("Company Location", sorted(df["company_location"].unique()))
-company_size = st.selectbox("Company Size", sorted(df["company_size"].unique()))
-education_required = st.selectbox("Education Required", sorted(df["education_required"].unique()))
+job_title = st.selectbox("Job Title", ["None"] + sorted(df["job_title"].unique().tolist()))
+experience_level = st.selectbox("Experience Level", ["None"] + sorted(df["experience_level"].unique().tolist()))
+employment_type = st.selectbox("Employment Type", ["None"] + sorted(df["employment_type"].unique().tolist()))
+company_location = st.selectbox("Company Location", ["None"] + sorted(df["company_location"].unique().tolist()))
+company_size = st.selectbox("Company Size", ["None"] + sorted(df["company_size"].unique().tolist()))
+education_required = st.selectbox("Education Required", ["None"] + sorted(df["education_required"].unique().tolist()))
 years_experience = st.slider("Years of Experience", min_value=0, max_value=30, value=5)
 
 st.divider()
@@ -66,12 +67,16 @@ def encode_input(job_title, experience_level, employment_type,
     })
 
     for col in input_data.columns:
-        if col in label_encoders:
-            le = label_encoders[col]
-            input_data[col] = le.transform(input_data[col])
-        elif input_data[col].dtype == "object":
-            le = LabelEncoder()
-            input_data[col] = le.fit_transform(input_data[col])
+        if input_data[col].dtype == "object":
+            if col in label_encoders:
+                le = label_encoders[col]
+                # Handle unseen labels gracefully
+                input_data[col] = input_data[col].apply(lambda x: x if x in le.classes_ else le.classes_[0])
+                input_data[col] = le.transform(input_data[col])
+            else:
+                # Create temporary encoding for new unseen categories
+                le = LabelEncoder()
+                input_data[col] = le.fit_transform(input_data[col])
 
     return input_data
 
@@ -83,9 +88,14 @@ if st.button("🚀 Predict Salary"):
             company_location, company_size, education_required, years_experience
         )
 
-        prediction_log = model.predict(input_encoded)[0]  # Model trained on log(salary)
-        salary_pred_usd = np.exp(prediction_log)  # Reverse log transformation
+        # Predict the log(salary)
+        prediction_log = model.predict(input_encoded)[0]
 
+        # Convert log salary back to original scale
+        salary_pred_usd = np.expm1(prediction_log)  # safer than exp() if log1p was used
+        salary_pred_usd = float(salary_pred_usd)
+
+        # Display results
         st.success(f"💰 Predicted Salary: **${salary_pred_usd:,.2f} USD**")
 
         salary_myr = salary_pred_usd * 4.7
@@ -97,3 +107,4 @@ if st.button("🚀 Predict Salary"):
 # ==================== FOOTER ==================== #
 st.divider()
 st.caption("📊 Model trained on AI Job Dataset — Powered by CatBoost Regressor.")
+
