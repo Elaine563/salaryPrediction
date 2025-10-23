@@ -1,60 +1,110 @@
 import streamlit as st
 import pandas as pd
 import pickle
+from sklearn.preprocessing import LabelEncoder
 import numpy as np
-from catboost import CatBoostRegressor
 
-st.set_page_config(page_title="AI/ML Salary Prediction", layout="wide")
+# ==================== PAGE CONFIG ==================== #
+st.set_page_config(
+    page_title="AI/ML Salary Prediction",
+    page_icon="💼",
+    layout="wide"
+)
 
-# Load model
+# ==================== LOAD DATA ==================== #
+df = pd.read_csv("ai_job_dataset.csv")
+
+# ==================== LOAD MODEL & ENCODERS ==================== #
 try:
     with open("salary_predictor.pkl", "rb") as f:
         model = pickle.load(f)
+    st.sidebar.success("✅ Model Loaded Successfully")
 except Exception as e:
-    st.error(f"❌ Failed to load model: {e}")
+    st.sidebar.error(f"❌ Error loading model: {e}")
     st.stop()
 
-# Load label encoders if you have them
 try:
     with open("label_encoders.pkl", "rb") as f:
         label_encoders = pickle.load(f)
-except:
+    st.sidebar.success("✅ Label Encoders Loaded")
+except Exception as e:
+    st.sidebar.warning("⚠️ No label encoders found. Using new encoding.")
     label_encoders = {}
 
-st.title("💼 AI/ML Salary Prediction")
+# ==================== PAGE INTRO ==================== #
+st.title("💼 AI/ML Salary Prediction System")
+st.write("""
+This app predicts **AI/ML professional salaries** using a trained **CatBoost Regressor model**.
+Select job details below to get an estimated salary.
+""")
 
-# Input form
-with st.form("prediction_form"):
-    st.subheader("Enter Employee Information")
+st.divider()
 
-    country = st.selectbox("Country", ["United States", "India", "Germany", "Malaysia"])
-    experience = st.slider("Years of Experience", 0, 20, 3)
-    education = st.selectbox("Education Level", ["Bachelor's", "Master's", "PhD"])
-    job_title = st.selectbox("Job Title", ["Data Scientist", "ML Engineer", "AI Researcher", "Software Engineer"])
-    company_size = st.selectbox("Company Size", ["Small", "Medium", "Large"])
+# ==================== INPUT SECTION ==================== #
+st.subheader("🔍 Enter Job & Company Details")
 
-    submitted = st.form_submit_button("Predict Salary")
+job_title = st.selectbox("Job Title", sorted(df["job_title"].unique()))
+salary_currency = st.selectbox("Salary Currency", sorted(df["salary_currency"].unique()))
+experience_level = st.selectbox("Experience Level", sorted(df["experience_level"].unique()))
+employment_type = st.selectbox("Employment Type", sorted(df["employment_type"].unique()))
+company_location = st.selectbox("Company Location", sorted(df["company_location"].unique()))
+company_size = st.selectbox("Company Size", sorted(df["company_size"].unique()))
+employee_residence = st.selectbox("Employee Residence", sorted(df["employee_residence"].unique()))
+required_skills = st.selectbox("Required Skills", sorted(df["required_skills"].unique()))
+education_required = st.selectbox("Education Required", sorted(df["education_required"].unique()))
 
-if submitted:
+years_experience = st.slider("Years of Experience", min_value=0, max_value=30, value=5)
+
+st.divider()
+
+# ==================== ENCODING FUNCTION ==================== #
+def encode_input(job_title, salary_currency, experience_level, employment_type,
+                 company_location, company_size, employee_residence, required_skills,
+                 education_required, years_experience):
+
+    input_data = pd.DataFrame({
+        "job_title": [job_title],
+        "salary_currency": [salary_currency],
+        "experience_level": [experience_level],
+        "employment_type": [employment_type],
+        "company_location": [company_location],
+        "company_size": [company_size],
+        "employee_residence": [employee_residence],
+        "required_skills": [required_skills],
+        "education_required": [education_required],
+        "years_experience": [years_experience]
+    })
+
+    for col in input_data.columns:
+        if col in label_encoders:
+            le = label_encoders[col]
+            input_data[col] = le.transform(input_data[col])
+        elif input_data[col].dtype == "object":
+            le = LabelEncoder()
+            input_data[col] = le.fit_transform(input_data[col])
+
+    return input_data
+
+# ==================== PREDICTION SECTION ==================== #
+if st.button("🚀 Predict Salary"):
     try:
-        # Encode categorical columns
-        input_dict = {
-            "Country": country,
-            "Experience": experience,
-            "Education": education,
-            "Job Title": job_title,
-            "Company Size": company_size
-        }
+        input_encoded = encode_input(
+            job_title, salary_currency, experience_level, employment_type,
+            company_location, company_size, employee_residence,
+            required_skills, education_required, years_experience
+        )
 
-        input_df = pd.DataFrame([input_dict])
+        prediction_log = model.predict(input_encoded)[0]  # Model trained on log(salary)
+        salary_pred_usd = np.exp(prediction_log)  # Reverse log transformation
 
-        for col in label_encoders:
-            if col in input_df.columns:
-                input_df[col] = label_encoders[col].transform(input_df[col])
+        st.success(f"💰 Predicted Salary: **${salary_pred_usd:,.2f} USD**")
 
-        # Predict
-        prediction = model.predict(input_df)[0]
-        st.success(f"💰 Predicted Salary: ${prediction:,.2f}")
+        salary_myr = salary_pred_usd * 4.7
+        st.info(f"🇲🇾 Equivalent Salary: **RM{salary_myr:,.2f} MYR**")
 
     except Exception as e:
-        st.error(f"⚠️ An error occurred while making the prediction.\n\nError details: {e}")
+        st.error(f"⚠️ Error occurred while predicting: {e}")
+
+# ==================== FOOTER ==================== #
+st.divider()
+st.caption("📊 Model trained on AI Job Dataset — Powered by CatBoost Regressor.")
