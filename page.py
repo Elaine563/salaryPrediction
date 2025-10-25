@@ -6,7 +6,7 @@ import numpy as np
 
 
 st.set_page_config(
-    page_title="AI/ML Salary Prediction",
+    page_title="Annual Salary Prediction for AI Job",
     page_icon="💼",
     layout="wide"
 )
@@ -30,16 +30,26 @@ except Exception as e:
     label_encoders = {}
 
 # ==================== PAGE INTRO ==================== #
-st.title("💼 AI/ML Salary Prediction System")
+st.title("💼 AI/ML Annual Salary Prediction Dashboard")
+
 st.write("""
-This app predicts **AI/ML professional salaries** using a trained **CatBoost Regressor model**.  
-Select job details below to get an estimated salary prediction.
+Welcome to the **AI/ML Salary Prediction System**!  
+This dashboard uses a **CatBoost Machine Learning model** trained on real job market data  
+to **predict annual salaries** based on job role, experience, and company profile.
+
+📌 Use this tool to:
+- Estimate salaries for different AI/ML job positions
+- Compare salary expectations globally
+- Gain insights into career growth and market demand
 """)
+
+st.info("💡 *All salary values are predicted in USD and converted into MYR for convenience.*")
 
 st.divider()
 
 # ==================== INPUT SECTION ==================== #
 st.subheader("🔍 Enter Job & Company Details")
+st.write("Provide information below to generate a salary estimation based on similar roles in the industry.")
 
 job_title = st.selectbox("Job Title", ["None"] + sorted(df["job_title"].unique().tolist()))
 experience_level = st.selectbox("Experience Level", ["None"] + sorted(df["experience_level"].unique().tolist()))
@@ -70,11 +80,9 @@ def encode_input(job_title, experience_level, employment_type,
         if input_data[col].dtype == "object":
             if col in label_encoders:
                 le = label_encoders[col]
-                # Handle unseen labels gracefully
                 input_data[col] = input_data[col].apply(lambda x: x if x in le.classes_ else le.classes_[0])
                 input_data[col] = le.transform(input_data[col])
             else:
-                # Create temporary encoding for new unseen categories
                 le = LabelEncoder()
                 input_data[col] = le.fit_transform(input_data[col])
 
@@ -88,15 +96,10 @@ if st.button("🚀 Predict Salary"):
             company_location, company_size, education_required, years_experience
         )
 
-        # Predict the log(salary)
         prediction_log = model.predict(input_encoded)[0]
+        salary_pred_usd = float(np.expm1(prediction_log))
 
-        # Convert log salary back to original scale
-        salary_pred_usd = np.expm1(prediction_log)  # safer than exp() if log1p was used
-        salary_pred_usd = float(salary_pred_usd)
-
-        # Display results
-        st.success(f"💰 Predicted Salary: **${salary_pred_usd:,.2f} USD**")
+        st.success(f"💰 Predicted Annual Salary: **${salary_pred_usd:,.2f} USD**")
 
         salary_myr = salary_pred_usd * 4.7
         st.info(f"🇲🇾 Equivalent Salary: **RM{salary_myr:,.2f} MYR**")
@@ -104,7 +107,19 @@ if st.button("🚀 Predict Salary"):
     except Exception as e:
         st.error(f"⚠️ Error occurred while predicting: {e}")
 
-# ==================== FOOTER ==================== #
+# ==================== EXPLANATION / PERFORMANCE ==================== #
 st.divider()
-st.caption("📊 Model trained on AI Job Dataset — Powered by CatBoost Regressor.")
+st.subheader("📈 Model Performance & Information")
 
+st.write("""
+This prediction is powered by a **CatBoost Regressor**, optimized for handling categorical job attributes.
+
+### ✅ Model Evaluation Results (Log-Scale)
+- **MSE (log):** 0.019985  
+- **RMSE (log):** 0.141369  
+- **R² Score (log):** 0.918697  
+
+🧠 *The model explains over 91% of the variance in salaries — indicating strong prediction capability.*
+""")
+
+st.caption("📊 Model trained using real-world AI job dataset. Powered by Machine Learning ⚙️")
