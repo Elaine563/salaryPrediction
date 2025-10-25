@@ -46,25 +46,23 @@ with col_map:
         color_continuous_scale=["#FFFFFF","#FFC0CB","#B22222"],  
         hover_name="employee_residence",
         hover_data={"count": True},
-        title="Number of Employees per Country",
     )
     
     map_fig.update_layout(
-        title_x=1,
+        title=None,  # Remove chart title since we added custom text above
         geo=dict(
             showframe=False,
             showcoastlines=True,
             projection_type="natural earth",
             bgcolor="rgba(0,0,0,0)"
         ),
-        margin=dict(l=0, r=0, t=50, b=0),
+        margin=dict(l=0, r=0, t=0, b=0),
         coloraxis_colorbar=dict(title="Number of People")
     )
     st.plotly_chart(map_fig, use_container_width=True)
 
 # ---------------- Top 10 Skills as a Ranked List ---------------- #
 with col_skills:
-    st.markdown("#### 🧠 Top 10 Skills")
     if "required_skills" in df_filtered.columns and len(df_filtered) > 0:
         skills_series = df_filtered["required_skills"].dropna().str.split(", ").explode()
         top_skills = skills_series.value_counts().head(10).reset_index()
