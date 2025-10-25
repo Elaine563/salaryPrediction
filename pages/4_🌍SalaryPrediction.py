@@ -6,7 +6,7 @@ import numpy as np
 
 st.set_page_config(
     page_title="Annual Salary Prediction for AI Job",
-    page_icon="🤖",
+    page_icon="🌍",
     layout="wide"
 )
 
@@ -15,7 +15,7 @@ df = pd.read_csv("ai_job_dataset.csv")  # original dataset
 header_col1, header_col2 = st.columns([3, 1.2]) 
 
 with header_col1:
-    st.title("🤖 AI/ML Annual Salary Prediction Dashboard")
+    st.title("🌍 AI/ML Annual Salary Prediction Dashboard")
     st.write("""
 Welcome to the **Annual Salary Prediction Dashboard**!  
 This dashboard uses a **CatBoost Machine Learning model** trained on real job market data  
