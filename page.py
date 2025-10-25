@@ -11,6 +11,12 @@ st.set_page_config(
     layout="wide"
 )
 
+col1, col2 = st.columns([3, 1])  # Adjust ratio as needed
+
+with col2:
+    st.image("ai.png", use_container_width=True)
+
+
 df = pd.read_csv("ai_job_dataset.csv")  # original dataset
 
 # ==================== INTRO ==================== #
