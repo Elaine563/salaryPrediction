@@ -27,10 +27,8 @@ to **predict annual salaries** based on job role, experience, and company profil
 - Gain insights into career growth and market demand
 """)
 
-col1, col2 = st.columns([3, 1])  # Adjust ratio as needed
-
-with col2:
-    st.image("ai.png", use_container_width=True)
+with header_col2:
+    st.image("ai.png", width=140)
 
 st.info("💡 *All salary values are predicted in USD and converted into MYR for convenience.*")
 
