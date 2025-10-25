@@ -8,14 +8,13 @@ st.set_page_config(page_title="Job Market Insights", page_icon="📈", layout="w
 df = pd.read_csv("ai_job_dataset.csv")
 
 # ---------------- Page Title & Description ---------------- #
-st.markdown("<h1 style='text-align: center; color: #B22222;'>📊 Job Market Insights Dashboard</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: left; color: #B22222;'>📊 Job Market Insights Dashboard</h1>", unsafe_allow_html=True)
 st.markdown(
     """
-    <p style='text-align: center; font-size:16px;'>
-    This dashboard visualizes the global distribution of AI-related job positions and highlights the 
-    most in-demand skills for professionals in the AI/ML job market. Use the filter below to select a specific job title 
-    or explore the overall trends across all roles. The map shows the number of employees per country, and the ranking 
-    on the right lists the top 10 most required skills based on the current selection.
+    <p style='text-align: left; font-size:16px;'>
+    Explore the global distribution of AI-related job positions and discover the most in-demand skills in the market.
+    Select a job title below to filter the insights. The map shows the number of employees per country, and the ranking
+    on the right lists the top 10 most requested skills for the selected role.
     </p>
     """, unsafe_allow_html=True
 )
@@ -31,10 +30,9 @@ st.info(f"Displaying insights for: **{selected_job}**. Total records: {len(df_fi
 
 st.divider()
 
-# ---------------- Map and Skills Side by Side ---------------- #
+# ---------------- Map and Top Skills Side by Side ---------------- #
 st.subheader("🌍 Employee Count by Country & Top Skills")
 
-# Layout: map on left, top skills on right
 col_map, col_skills = st.columns([3, 1])
 
 # ---------------- Map: Count of People ---------------- #
@@ -65,7 +63,7 @@ with col_map:
     )
     st.plotly_chart(map_fig, use_container_width=True)
 
-# ---------------- Top 10 Skills Ranking ---------------- #
+# ---------------- Top 10 Skills as a Ranked List ---------------- #
 with col_skills:
     st.markdown("### 🧠 Top 10 Skills")
     if "required_skills" in df_filtered.columns and len(df_filtered) > 0:
@@ -73,12 +71,9 @@ with col_skills:
         top_skills = skills_series.value_counts().head(10).reset_index()
         top_skills.columns = ["Skill", "Count"]
 
-        skills_fig = px.bar(
-            top_skills, x="Count", y="Skill", orientation="h",
-            color="Count", color_continuous_scale="Reds",
-        )
-        skills_fig.update_layout(yaxis=dict(autorange="reversed"), showlegend=False, margin=dict(l=0, r=0, t=20, b=0))
-        st.plotly_chart(skills_fig, use_container_width=True)
+        # Display as numbered list with counts
+        for idx, row in top_skills.iterrows():
+            st.markdown(f"**{idx+1}. {row['Skill']}** — {row['Count']} jobs")
     else:
         st.info("No skill data available for this selection.")
 
@@ -88,7 +83,7 @@ st.markdown(
     """
     ## 🔎 Dashboard Insights
     - The **map** highlights countries with the largest number of AI/ML employees. Darker red indicates a higher concentration of talent.
-    - The **ranking chart** on the right lists the top 10 skills most frequently requested by employers for the selected job role.
+    - The **ranking list** on the right shows the top 10 skills most requested by employers for the selected job role.
     - By selecting different job titles, you can explore which skills are most demanded in different roles and where talent is concentrated globally.
     - This visualization helps both **job seekers** and **employers** understand market demand trends, identify skill gaps, and make data-driven decisions.
     """
