@@ -64,7 +64,7 @@ with col_map:
 
 # ---------------- Top 10 Skills as a Ranked List ---------------- #
 with col_skills:
-    st.markdown("### 🧠 Top 10 Skills")
+    st.markdown("#### 🧠 Top 10 Skills")
     if "required_skills" in df_filtered.columns and len(df_filtered) > 0:
         skills_series = df_filtered["required_skills"].dropna().str.split(", ").explode()
         top_skills = skills_series.value_counts().head(10).reset_index()
