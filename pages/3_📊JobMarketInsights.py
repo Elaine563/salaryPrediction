@@ -8,7 +8,7 @@ st.set_page_config(page_title="Job Market Insights", page_icon="📈", layout="w
 df = pd.read_csv("ai_job_dataset.csv")
 
 # ---------------- Page Title & Description ---------------- #
-st.title("📊 Job Market Insights Dashboard", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: left; color: #000000;'>📊 Job Market Insights Dashboard</h1>", unsafe_allow_html=True)
 st.markdown(
     """
     <p style='text-align: left; font-size:16px;'>
@@ -18,7 +18,6 @@ st.markdown(
     </p>
     """, unsafe_allow_html=True
 )
-
 # ---------------- Filter Section in the Center ---------------- #
 st.markdown("### 🔍 Filter by Job Title")
 job_options = ["All"] + sorted(df["job_title"].unique())
