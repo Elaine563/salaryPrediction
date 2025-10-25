@@ -106,6 +106,32 @@ with col_text:
     )
 
 st.divider()
+# ---------------- Company Size ---------------- #
+st.subheader("🏢 Company Size Distribution")
+col_chart, col_text = st.columns([3, 2])
+
+with col_chart:
+    company_counts = df_filtered["company_size"].value_counts().reset_index()
+    company_counts.columns = ["Company Size", "Count"]
+
+    fig_company = px.pie(
+        company_counts,
+        names="Company Size",
+        values="Count",
+        hole=0.3,
+        color_discrete_sequence=px.colors.qualitative.Set2
+    )
+    st.plotly_chart(fig_company, use_container_width=True)
+
+with col_text:
+    st.markdown(
+        """
+        💡 This pie chart shows how AI-related jobs are distributed across companies of different sizes.
+        It helps users understand which types of companies are hiring the most.
+        """
+    )
+
+st.divider()
 
 # ---------------- Detailed Description ---------------- #
 st.divider()
