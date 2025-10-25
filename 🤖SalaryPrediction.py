@@ -106,19 +106,21 @@ if st.button("🚀 Predict Salary"):
         st.warning("⚠️ Please select at least Job Title.")
     else:
         try:
-            # Convert UI labels → original dataset format
-            company_size = company_size.replace({"Small": "S", "Medium": "M", "Large": "L"})
-            employment_type = employment_type.replace({"Full Time": "FT", "Part Time": "PT", "Contract": "CT", "Freelance": "FL"})
-            experience_level = experience_level.replace({"Entry Level": "EN", "Mid Level": "MI", "Senior Level": "SE", "Executive": "EX"})
+            # ✅ Convert UI labels → dataset labels using pandas Series replace()
+            company_size = pd.Series([company_size]).replace({"Small": "S", "Medium": "M", "Large": "L"}).iloc[0]
+            employment_type = pd.Series([employment_type]).replace({"Full Time": "FT", "Part Time": "PT", "Contract": "CT", "Freelance": "FL"}).iloc[0]
+            experience_level = pd.Series([experience_level]).replace({"Entry Level": "EN", "Mid Level": "MI", "Senior Level": "SE", "Executive": "EX"}).iloc[0]
 
             input_encoded = encode_input(
                 job_title, experience_level, employment_type,
                 company_location, company_size, education_required, years_experience
             )
 
+            # ✅ Predict (log scale → convert back)
             prediction_log = model.predict(input_encoded)[0]
             salary_pred_usd = float(np.expm1(prediction_log))
 
+            # ✅ Display results
             st.success(f"💰 Predicted Annual Salary: **${salary_pred_usd:,.2f} USD**")
             salary_myr = salary_pred_usd * 4.7
             st.info(f"🇲🇾 Equivalent Salary: **RM{salary_myr:,.2f} MYR**")
