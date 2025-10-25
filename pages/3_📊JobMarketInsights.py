@@ -98,7 +98,11 @@ with col_chart:
             template="plotly_dark",
             color_discrete_sequence=["#B22222"]
         )
-        
+        fig_industry.update_traces(
+            fill='toself',
+            fillcolor='rgba(255, 76, 76, 0.3)',  # semi-transparent fill
+            line=dict(color='#FF1A1A', width=3)  # darker line
+        )
         fig_industry.update_layout(
             height=600,  # make chart taller
             width=800,   # make chart wider (optional)
