@@ -8,7 +8,7 @@ st.set_page_config(page_title="Job Market Insights", page_icon="📈", layout="w
 df = pd.read_csv("ai_job_dataset.csv")
 
 # ---------------- Page Title & Description ---------------- #
-st.markdown("<h1 style='text-align: left; color: #000000;'>📊 Job Market Insights Dashboard</h1>", unsafe_allow_html=True)
+st.title("📊 Job Market Insights Dashboard")
 st.markdown(
     """
     <p style='text-align: left; font-size:16px;'>
