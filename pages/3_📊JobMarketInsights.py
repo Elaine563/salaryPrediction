@@ -43,7 +43,7 @@ with col_map:
         locations="employee_residence",
         locationmode="country names",
         color="count",
-        color_continuous_scale=["#B22222","#FFC0CB","#FFFFFF"],  
+        color_continuous_scale=["#FFFFFF","#FFC0CB","#B22222"],  
         hover_name="employee_residence",
         hover_data={"count": True},
     )
