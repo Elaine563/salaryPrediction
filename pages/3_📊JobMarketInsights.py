@@ -115,7 +115,7 @@ with col_text_table:
             - Other industries show emerging demand; users can spot growing sectors easily.
             """
         )
-        st.markdown("#### 📊 Industry Job Ranking")
+        st.markdown("###### 📊 Industry Job Ranking")
         st.dataframe(industry_counts.reset_index(drop=True))
     else:
         st.info("No data available for this selection.")
