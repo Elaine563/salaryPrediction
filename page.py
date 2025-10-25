@@ -13,22 +13,6 @@ st.set_page_config(
 
 df = pd.read_csv("ai_job_dataset.csv")
 
-try:
-    with open("salary_predictor.pkl", "rb") as f:
-        model = pickle.load(f)
-    st.sidebar.success("✅ Model Loaded Successfully")
-except Exception as e:
-    st.sidebar.error(f"❌ Error loading model: {e}")
-    st.stop()
-
-try:
-    with open("label_encoders.pkl", "rb") as f:
-        label_encoders = pickle.load(f)
-    st.sidebar.success("✅ Label Encoders Loaded")
-except Exception as e:
-    st.sidebar.warning("⚠️ No label encoders found. Using new encoding.")
-    label_encoders = {}
-
 # ==================== PAGE INTRO ==================== #
 st.title("💼 AI/ML Annual Salary Prediction Dashboard")
 
