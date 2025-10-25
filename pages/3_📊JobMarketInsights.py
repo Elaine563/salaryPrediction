@@ -98,7 +98,13 @@ with col_chart:
             template="plotly_dark",
             color_discrete_sequence=["#B22222"]
         )
-        fig_industry.update_traces(fill='toself')
+        
+        fig_industry.update_layout(
+            height=600,  # make chart taller
+            width=800,   # make chart wider (optional)
+            margin=dict(l=20, r=20, t=20, b=20)
+        )
+        
         st.plotly_chart(fig_industry, use_container_width=True)
     else:
         st.warning("⚠️ No industry data available for this selection.")
