@@ -13,6 +13,11 @@ st.set_page_config(
 
 df = pd.read_csv("ai_job_dataset.csv")
 
+# Convert user-friendly labels back to original dataset values for encoding
+company_size = company_size.replace({"Small": "S", "Medium": "M", "Large": "L"})
+employment_type = employment_type.replace({"Full Time": "FT", "Part Time": "PT", "Contract": "CT", "Freelance": "FL"})
+experience_level = experience_level.replace({"Entry Level": "EN", "Mid Level": "MI", "Senior Level": "SE", "Executive": "EX"})
+
 # ==================== PAGE INTRO ==================== #
 st.title("💼 AI/ML Annual Salary Prediction Dashboard")
 
@@ -35,13 +40,45 @@ st.divider()
 st.subheader("🔍 Enter Job & Company Details")
 st.write("Provide information below to generate a salary estimation based on similar roles in the industry.")
 
-job_title = st.selectbox("Job Title", ["None"] + sorted(df["job_title"].unique().tolist()))
-experience_level = st.selectbox("Experience Level", ["None"] + sorted(df["experience_level"].unique().tolist()))
-employment_type = st.selectbox("Employment Type", ["None"] + sorted(df["employment_type"].unique().tolist()))
-company_location = st.selectbox("Company Location", ["None"] + sorted(df["company_location"].unique().tolist()))
-company_size = st.selectbox("Company Size", ["None"] + sorted(df["company_size"].unique().tolist()))
-education_required = st.selectbox("Education Required", ["None"] + sorted(df["education_required"].unique().tolist()))
-years_experience = st.slider("Years of Experience", min_value=0, max_value=30, value=5)
+# Replace raw labels with user-friendly text
+df_display = df.copy()
+df_display["company_size"] = df_display["company_size"].replace({
+    "S": "Small",
+    "M": "Medium",
+    "L": "Large"
+})
+
+df_display["employment_type"] = df_display["employment_type"].replace({
+    "FT": "Full Time",
+    "PT": "Part Time",
+    "CT": "Contract",
+    "FL": "Freelance"
+})
+
+df_display["experience_level"] = df_display["experience_level"].replace({
+    "EN": "Entry Level",
+    "MI": "Mid Level",
+    "SE": "Senior Level",
+    "EX": "Executive"
+})
+
+# Organize selectors into columns
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    job_title = st.selectbox("Job Title", ["None"] + sorted(df_display["job_title"].unique().tolist()))
+    employment_type = st.selectbox("Employment Type", ["None"] + sorted(df_display["employment_type"].unique().tolist()))
+
+with col2:
+    experience_level = st.selectbox("Experience Level", ["None"] + sorted(df_display["experience_level"].unique().tolist()))
+    company_location = st.selectbox("Company Location", ["None"] + sorted(df_display["company_location"].unique().tolist()))
+
+with col3:
+    company_size = st.selectbox("Company Size", ["None"] + sorted(df_display["company_size"].unique().tolist()))
+    education_required = st.selectbox("Education Required", ["None"] + sorted(df_display["education_required"].unique().tolist()))
+
+# Years of experience full width
+years_experience = st.slider("Years of Experience", min_value=0, max_value=30, value=3)
 
 st.divider()
 
