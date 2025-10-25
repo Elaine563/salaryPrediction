@@ -106,32 +106,30 @@ with col_text:
     )
 
 st.divider()
-# ---------------- Company Size ---------------- #
-st.subheader("🏢 Company Size Distribution")
+# ---------------- Remote Ratio ---------------- #
+st.subheader("🏠 Remote Work Ratio")
 col_chart, col_text = st.columns([3, 2])
 
 with col_chart:
-    company_counts = df_filtered["company_size"].value_counts().reset_index()
-    company_counts.columns = ["Company Size", "Count"]
+    remote_counts = df_filtered["remote_ratio"].value_counts().reset_index()
+    remote_counts.columns = ["Remote %", "Count"]
 
-    fig_company = px.pie(
-        company_counts,
-        names="Company Size",
-        values="Count",
-        hole=0.3,
-        color_discrete_sequence=px.colors.qualitative.Set2
+    fig_remote = px.pie(
+        remote_counts, 
+        names="Remote %", 
+        values="Count", 
+        hole=0.4, 
+        color_discrete_sequence=px.colors.sequential.Pinkyl
     )
-    st.plotly_chart(fig_company, use_container_width=True)
+    st.plotly_chart(fig_remote, use_container_width=True)
 
 with col_text:
     st.markdown(
         """
-        💡 This pie chart shows how AI-related jobs are distributed across companies of different sizes.
-        It helps users understand which types of companies are hiring the most.
+        💡 This chart shows the proportion of AI-related jobs that allow remote work. 
+        Higher percentages indicate more remote opportunities for job seekers.
         """
     )
-
-st.divider()
 
 # ---------------- Detailed Description ---------------- #
 st.divider()
