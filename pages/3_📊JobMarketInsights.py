@@ -46,10 +46,11 @@ with col_map:
         color_continuous_scale=["#FFFFFF","#FFC0CB","#B22222"],  
         hover_name="employee_residence",
         hover_data={"count": True},
+        title="Number of Employees per Country",
     )
     
     map_fig.update_layout(
-        title_x=0.5,
+        title_x=1,
         geo=dict(
             showframe=False,
             showcoastlines=True,
