@@ -12,8 +12,7 @@ st.set_page_config(
 
 df = pd.read_csv("ai_job_dataset.csv")  # original dataset
 
-# ==================== HEADER WITH IMAGE ==================== #
-header_col1, header_col2 = st.columns([4, 1])
+header_col1, header_col2 = st.columns([3, 1.2]) 
 
 with header_col1:
     st.title("💼 AI/ML Annual Salary Prediction Dashboard")
@@ -29,8 +28,8 @@ to **predict annual salaries** based on job role, experience, and company profil
 """)
 
 with header_col2:
-    st.image("ai.png", width=140)
-
+    st.image("ai.png", width=200) 
+    
 st.info("💡 *All salary values are predicted in USD and converted into MYR for convenience.*")
 
 st.divider()
