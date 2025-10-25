@@ -11,50 +11,59 @@ st.set_page_config(
     layout="wide"
 )
 
-df = pd.read_csv("ai_job_dataset.csv")
+df = pd.read_csv("ai_job_dataset.csv")  # original dataset
 
-# Convert user-friendly labels back to original dataset values for encoding
-company_size = company_size.replace({"Small": "S", "Medium": "M", "Large": "L"})
-employment_type = employment_type.replace({"Full Time": "FT", "Part Time": "PT", "Contract": "CT", "Freelance": "FL"})
-experience_level = experience_level.replace({"Entry Level": "EN", "Mid Level": "MI", "Senior Level": "SE", "Executive": "EX"})
+# ✅ Load trained model + encoders
+try:
+    with open("salary_predictor.pkl", "rb") as f:
+        model = pickle.load(f)
+    st.sidebar.success("✅ Model Loaded Successfully")
+except Exception as e:
+    st.sidebar.error(f"❌ Error loading model: {e}")
+    st.stop()
 
-# ==================== PAGE INTRO ==================== #
+try:
+    with open("label_encoders.pkl", "rb") as f:
+        label_encoders = pickle.load(f)
+    st.sidebar.success("✅ Label Encoders Loaded")
+except Exception as e:
+    st.sidebar.warning("⚠️ No label encoders found. Using new encoding.")
+    label_encoders = {}
+
+# ==================== INTRO ==================== #
 st.title("💼 AI/ML Annual Salary Prediction Dashboard")
 
 st.write("""
-Welcome to the **AI/ML Salary Prediction System**!  
-This dashboard uses a **CatBoost Machine Learning model** trained on real job market data  
-to **predict annual salaries** based on job role, experience, and company profile.
+This dashboard predicts **annual salaries for AI & ML professionals** using real-world job
+market data and a **CatBoost Regressor model** trained for high prediction accuracy.
 
-📌 Use this tool to:
-- Estimate salaries for different AI/ML job positions
-- Compare salary expectations globally
-- Gain insights into career growth and market demand
+📌 Explore and compare expected salaries across:
+- Job positions
+- Experience levels
+- Employment types
+- Company sizes and locations
 """)
 
-st.info("💡 *All salary values are predicted in USD and converted into MYR for convenience.*")
+st.info("💡 Salary estimates are shown in both USD and MYR 🇲🇾")
 
 st.divider()
 
-# ==================== INPUT SECTION ==================== #
-st.subheader("🔍 Enter Job & Company Details")
-st.write("Provide information below to generate a salary estimation based on similar roles in the industry.")
+# ==================== INPUTS ==================== #
+st.subheader("🔍 Job & Company Details")
 
-# Replace raw labels with user-friendly text
+# ✅ Friendly text replacements for UI selections
 df_display = df.copy()
 df_display["company_size"] = df_display["company_size"].replace({
     "S": "Small",
     "M": "Medium",
     "L": "Large"
 })
-
 df_display["employment_type"] = df_display["employment_type"].replace({
     "FT": "Full Time",
     "PT": "Part Time",
     "CT": "Contract",
     "FL": "Freelance"
 })
-
 df_display["experience_level"] = df_display["experience_level"].replace({
     "EN": "Entry Level",
     "MI": "Mid Level",
@@ -62,7 +71,7 @@ df_display["experience_level"] = df_display["experience_level"].replace({
     "EX": "Executive"
 })
 
-# Organize selectors into columns
+# ✅ Layout using columns
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -77,12 +86,11 @@ with col3:
     company_size = st.selectbox("Company Size", ["None"] + sorted(df_display["company_size"].unique().tolist()))
     education_required = st.selectbox("Education Required", ["None"] + sorted(df_display["education_required"].unique().tolist()))
 
-# Years of experience full width
-years_experience = st.slider("Years of Experience", min_value=0, max_value=30, value=3)
+years_experience = st.slider("Years of Experience", 0, 30, 3)
 
 st.divider()
 
-# ==================== ENCODING FUNCTION ==================== #
+# ==================== ENCODING ==================== #
 def encode_input(job_title, experience_level, employment_type,
                  company_location, company_size,
                  education_required, years_experience):
@@ -109,38 +117,48 @@ def encode_input(job_title, experience_level, employment_type,
 
     return input_data
 
-# ==================== PREDICTION SECTION ==================== #
+# ==================== PREDICT ==================== #
 if st.button("🚀 Predict Salary"):
-    try:
-        input_encoded = encode_input(
-            job_title, experience_level, employment_type,
-            company_location, company_size, education_required, years_experience
-        )
 
-        prediction_log = model.predict(input_encoded)[0]
-        salary_pred_usd = float(np.expm1(prediction_log))
+    if job_title == "None":
+        st.warning("⚠️ Please select at least Job Title.")
+    else:
+        try:
+            # ✅ Convert user-friendly labels back before encoding
+            company_size = company_size.replace({"Small": "S", "Medium": "M", "Large": "L"})
+            employment_type = employment_type.replace({"Full Time": "FT", "Part Time": "PT", "Contract": "CT", "Freelance": "FL"})
+            experience_level = experience_level.replace({"Entry Level": "EN", "Mid Level": "MI", "Senior Level": "SE", "Executive": "EX"})
 
-        st.success(f"💰 Predicted Annual Salary: **${salary_pred_usd:,.2f} USD**")
+            input_encoded = encode_input(
+                job_title, experience_level, employment_type,
+                company_location, company_size, education_required, years_experience
+            )
 
-        salary_myr = salary_pred_usd * 4.7
-        st.info(f"🇲🇾 Equivalent Salary: **RM{salary_myr:,.2f} MYR**")
+            prediction_log = model.predict(input_encoded)[0]
+            salary_pred_usd = float(np.expm1(prediction_log))
 
-    except Exception as e:
-        st.error(f"⚠️ Error occurred while predicting: {e}")
+            st.success(f"💰 Predicted Annual Salary: **${salary_pred_usd:,.2f} USD**")
 
-# ==================== EXPLANATION / PERFORMANCE ==================== #
+            salary_myr = salary_pred_usd * 4.7
+            st.info(f"🇲🇾 Equivalent Salary: **RM{salary_myr:,.2f} MYR**")
+
+        except Exception as e:
+            st.error(f"⚠️ Prediction failed: {e}")
+
+# ==================== PERFORMANCE ==================== #
 st.divider()
-st.subheader("📈 Model Performance & Information")
+st.subheader("📈 Model Performance")
 
 st.write("""
-This prediction is powered by a **CatBoost Regressor**, optimized for handling categorical job attributes.
+This prediction model is powered by **CatBoost Regressor**,  
+which handles categorical job attributes efficiently and provides high-accuracy results.
 
-### ✅ Model Evaluation Results (Log-Scale)
-- **MSE (log):** 0.019985  
-- **RMSE (log):** 0.141369  
-- **R² Score (log):** 0.918697  
+### ✅ Performance Metrics (Log-Scaled)
+- **MSE:** 0.019985  
+- **RMSE:** 0.141369  
+- **R² Score:** 0.918697  
 
-🧠 *The model explains over 91% of the variance in salaries — indicating strong prediction capability.*
+🧠 *The model captures over 91% of salary variance — strong predictive accuracy!*
 """)
 
-st.caption("📊 Model trained using real-world AI job dataset. Powered by Machine Learning ⚙️")
+st.caption("📊 Data-driven insights powered by Machine Learning — CatBoost Model ⚙️")
