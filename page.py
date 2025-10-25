@@ -13,45 +13,28 @@ st.set_page_config(
 
 df = pd.read_csv("ai_job_dataset.csv")  # original dataset
 
-# ✅ Load trained model + encoders
-try:
-    with open("salary_predictor.pkl", "rb") as f:
-        model = pickle.load(f)
-    st.sidebar.success("✅ Model Loaded Successfully")
-except Exception as e:
-    st.sidebar.error(f"❌ Error loading model: {e}")
-    st.stop()
-
-try:
-    with open("label_encoders.pkl", "rb") as f:
-        label_encoders = pickle.load(f)
-    st.sidebar.success("✅ Label Encoders Loaded")
-except Exception as e:
-    st.sidebar.warning("⚠️ No label encoders found. Using new encoding.")
-    label_encoders = {}
-
 # ==================== INTRO ==================== #
 st.title("💼 AI/ML Annual Salary Prediction Dashboard")
 
 st.write("""
-This dashboard predicts **annual salaries for AI & ML professionals** using real-world job
-market data and a **CatBoost Regressor model** trained for high prediction accuracy.
+Welcome to the **Annual Salary Prediction Dashboard**!  
+This dashboard uses a **CatBoost Machine Learning model** trained on real job market data  
+to **predict annual salaries** based on job role, experience, and company profile.
 
-📌 Explore and compare expected salaries across:
-- Job positions
-- Experience levels
-- Employment types
-- Company sizes and locations
+📌 Use this tool to:
+- Estimate salaries for different AI/ML job positions
+- Compare salary expectations globally
+- Gain insights into career growth and market demand
 """)
 
-st.info("💡 Salary estimates are shown in both USD and MYR 🇲🇾")
+st.info("💡 *All salary values are predicted in USD and converted into MYR for convenience.*")
 
 st.divider()
 
 # ==================== INPUTS ==================== #
 st.subheader("🔍 Job & Company Details")
+st.write("Provide information below to generate a salary estimation based on similar roles in the industry.")
 
-# ✅ Friendly text replacements for UI selections
 df_display = df.copy()
 df_display["company_size"] = df_display["company_size"].replace({
     "S": "Small",
@@ -162,3 +145,4 @@ which handles categorical job attributes efficiently and provides high-accuracy 
 """)
 
 st.caption("📊 Data-driven insights powered by Machine Learning — CatBoost Model ⚙️")
+st.caption("Predictions are estimates based on historical data trends and may vary depending on real-world conditions.")
