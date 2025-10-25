@@ -2,7 +2,5 @@ streamlit
 pandas
 numpy
 joblib
-lightgbm
-xgboost
-catboost
+wordcloud
 scikit-learn
