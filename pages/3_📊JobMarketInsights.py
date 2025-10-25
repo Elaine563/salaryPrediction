@@ -36,6 +36,8 @@ col_map, col_skills = st.columns([3, 1])
 
 # ---------------- Map: Count of People ---------------- #
 with col_map:
+    st.markdown("#### 🌍 Map of Employee Residence")
+
     country_counts = df_filtered.groupby("employee_residence").size().reset_index(name="count")
     
     map_fig = px.choropleth(
@@ -49,7 +51,7 @@ with col_map:
     )
     
     map_fig.update_layout(
-        title=None,  # Remove chart title since we added custom text above
+        title=None,  # Remove chart title
         geo=dict(
             showframe=False,
             showcoastlines=True,
@@ -63,6 +65,8 @@ with col_map:
 
 # ---------------- Top 10 Skills as a Ranked List ---------------- #
 with col_skills:
+    st.markdown("#### 🧠 Top 10 Skills") 
+
     if "required_skills" in df_filtered.columns and len(df_filtered) > 0:
         skills_series = df_filtered["required_skills"].dropna().str.split(", ").explode()
         top_skills = skills_series.value_counts().head(10).reset_index()
