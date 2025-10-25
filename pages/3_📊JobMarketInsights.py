@@ -77,6 +77,27 @@ with col_skills:
             st.markdown(f"**{idx+1}. {row['Skill']}** — {row['Count']} jobs")
     else:
         st.info("No skill data available for this selection.")
+        
+#------------------------Rader Chart--------------------------#
+st.subheader("🏭 Job Distribution by Industry")
+
+industry_counts = df_filtered["industry"].value_counts().reset_index()
+industry_counts.columns = ["Industry", "Count"]
+
+fig_industry = px.line_polar(
+    industry_counts,
+    r="Count",
+    theta="Industry",
+    line_close=True,
+    template="plotly_dark",
+    color_discrete_sequence=["#B22222"]
+)
+fig_industry.update_traces(fill='toself')
+st.plotly_chart(fig_industry, use_container_width=True)
+
+st.markdown(
+    "💡 This radar chart shows which industries are hiring AI talent the most, helping users understand market demand across sectors."
+)
 
 # ---------------- Detailed Description ---------------- #
 st.divider()
