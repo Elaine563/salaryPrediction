@@ -80,13 +80,15 @@ with col_skills:
         
 # ---------------- Industry Radar Chart ---------------- #
 st.subheader("🏭 Job Distribution by Industry")
-col_chart, col_text = st.columns([3, 2])
 
-# Group by industry based on filtered job selection
-industry_counts = df_filtered["industry"].value_counts().reset_index()
-industry_counts.columns = ["Industry", "Count"]
+# Create two columns: chart on left, description + table on right
+col_chart, col_text_table = st.columns([3, 2])
 
+# ---------------- Radar Chart ---------------- #
 with col_chart:
+    industry_counts = df_filtered["industry"].value_counts().reset_index()
+    industry_counts.columns = ["Industry", "Count"]
+    
     if not industry_counts.empty:
         fig_industry = px.line_polar(
             industry_counts,
@@ -101,7 +103,8 @@ with col_chart:
     else:
         st.warning("⚠️ No industry data available for this selection.")
 
-with col_text:
+# ---------------- Description + Ranking Table ---------------- #
+with col_text_table:
     if not industry_counts.empty:
         top_industry = industry_counts.iloc[0]["Industry"]
         top_count = industry_counts.iloc[0]["Count"]
@@ -109,19 +112,13 @@ with col_text:
             f"""
             💡 **Insights for '{selected_job}'**:  
             - The **{top_industry}** industry has the highest number of job postings ({top_count} positions).  
-            - Other industries show emerging demand; users can spot growing sectors easily.  
-            - Use this chart to identify career opportunities or understand competitive hiring markets.
+            - Other industries show emerging demand; users can spot growing sectors easily.
             """
         )
+        st.markdown("#### 📊 Industry Job Ranking")
+        st.dataframe(industry_counts.reset_index(drop=True))
     else:
-        st.markdown("💡 No industry data available for this selection.")
-
-# ---------------- Ranking Table ---------------- #
-st.markdown("#### 📊 Industry Job Ranking")
-if not industry_counts.empty:
-    st.dataframe(industry_counts.reset_index(drop=True))
-else:
-    st.info("No ranking data to display.")
+        st.info("No data available for this selection.")
 
 
 # ---------------- Detailed Description ---------------- #
@@ -131,6 +128,7 @@ st.markdown(
     ## 🔎 Dashboard Insights
     - The **map** highlights countries with the largest number of AI/ML employees. Darker red indicates a higher concentration of talent.
     - The **ranking list** on the right shows the top 10 skills most requested by employers for the selected job role.
+    - The **Industry Radar Chart** shows which sectors demand AI skills the most.
     - By selecting different job titles, you can explore which skills are most demanded in different roles and where talent is concentrated globally.
     - This visualization helps both **job seekers** and **employers** understand market demand trends, identify skill gaps, and make data-driven decisions.
     """
