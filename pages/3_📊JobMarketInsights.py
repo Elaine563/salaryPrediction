@@ -82,37 +82,46 @@ with col_skills:
 st.subheader("🏭 Job Distribution by Industry")
 col_chart, col_text = st.columns([3, 2])
 
-with col_chart:
-    industry_counts = df_filtered["industry"].value_counts().reset_index()
-    industry_counts.columns = ["Industry", "Count"]
+# Group by industry based on filtered job selection
+industry_counts = df_filtered["industry"].value_counts().reset_index()
+industry_counts.columns = ["Industry", "Count"]
 
-    fig_industry = px.line_polar(
-        industry_counts,
-        r="Count",
-        theta="Industry",
-        line_close=True,
-        template="plotly_dark",
-        color_discrete_sequence=["#B22222"]
-    )
-    fig_industry.update_traces(fill='toself')
-    st.plotly_chart(fig_industry, use_container_width=True)
+with col_chart:
+    if not industry_counts.empty:
+        fig_industry = px.line_polar(
+            industry_counts,
+            r="Count",
+            theta="Industry",
+            line_close=True,
+            template="plotly_dark",
+            color_discrete_sequence=["#B22222"]
+        )
+        fig_industry.update_traces(fill='toself')
+        st.plotly_chart(fig_industry, use_container_width=True)
+    else:
+        st.warning("⚠️ No industry data available for this selection.")
 
 with col_text:
-    # Identify top industry dynamically
     if not industry_counts.empty:
         top_industry = industry_counts.iloc[0]["Industry"]
         top_count = industry_counts.iloc[0]["Count"]
         st.markdown(
             f"""
-            💡 **Insights:**  
-            - The **{top_industry}** industry has the highest number of AI job postings ({top_count} jobs).  
+            💡 **Insights for '{selected_job}'**:  
+            - The **{top_industry}** industry has the highest number of job postings ({top_count} positions).  
             - Other industries show emerging demand; users can spot growing sectors easily.  
-            - Use this chart to target career opportunities or understand competitive hiring markets.  
-            🌟 Quickly see which sectors are leading in AI hiring!
+            - Use this chart to identify career opportunities or understand competitive hiring markets.
             """
         )
     else:
         st.markdown("💡 No industry data available for this selection.")
+
+# ---------------- Ranking Table ---------------- #
+st.markdown("#### 📊 Industry Job Ranking")
+if not industry_counts.empty:
+    st.dataframe(industry_counts.reset_index(drop=True))
+else:
+    st.info("No ranking data to display.")
 
 
 # ---------------- Detailed Description ---------------- #
