@@ -43,10 +43,9 @@ with col_map:
         locations="employee_residence",
         locationmode="country names",
         color="count",
-        color_continuous_scale=["#B22222","#FF69B4","#FFFFFF"],  # red → pink → white
+        color_continuous_scale=["#B22222","#FFC0CB","#FFFFFF"],  
         hover_name="employee_residence",
         hover_data={"count": True},
-        title="Number of Employees per Country",
     )
     
     map_fig.update_layout(
