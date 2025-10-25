@@ -28,7 +28,7 @@ to **predict annual salaries** based on job role, experience, and company profil
 """)
 
 with header_col2:
-    st.image("ai.png", width=200) 
+    st.image("ai.png", width=250) 
     
 st.info("💡 *All salary values are predicted in USD and converted into MYR for convenience.*")
 
