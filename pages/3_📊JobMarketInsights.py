@@ -30,13 +30,13 @@ st.info(f"Displaying insights for: **{selected_job}**. Total records: {len(df_fi
 st.divider()
 
 # ---------------- Map and Top Skills Side by Side ---------------- #
-st.subheader("🌍 Employee Count by Country & Top Skills")
+st.subheader("💡 Employee Count by Country & Top Skills")
 
 col_map, col_skills = st.columns([3, 1])
 
 # ---------------- Map: Count of People ---------------- #
 with col_map:
-    st.markdown("#### 🌍 Map of Employee Residence")
+    st.markdown("#### ⚙️ Map of Employee Residence")
 
     country_counts = df_filtered.groupby("employee_residence").size().reset_index(name="count")
     
