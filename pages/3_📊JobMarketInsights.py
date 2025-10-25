@@ -78,26 +78,34 @@ with col_skills:
     else:
         st.info("No skill data available for this selection.")
         
-#------------------------Rader Chart--------------------------#
+# ---------------- Industry Radar Chart ---------------- #
 st.subheader("🏭 Job Distribution by Industry")
+col_chart, col_text = st.columns([3, 2])
 
-industry_counts = df_filtered["industry"].value_counts().reset_index()
-industry_counts.columns = ["Industry", "Count"]
+with col_chart:
+    industry_counts = df_filtered["industry"].value_counts().reset_index()
+    industry_counts.columns = ["Industry", "Count"]
 
-fig_industry = px.line_polar(
-    industry_counts,
-    r="Count",
-    theta="Industry",
-    line_close=True,
-    template="plotly_dark",
-    color_discrete_sequence=["#B22222"]
-)
-fig_industry.update_traces(fill='toself')
-st.plotly_chart(fig_industry, use_container_width=True)
+    fig_industry = px.line_polar(
+        industry_counts,
+        r="Count",
+        theta="Industry",
+        line_close=True,
+        template="plotly_dark",
+        color_discrete_sequence=["#B22222"]
+    )
+    fig_industry.update_traces(fill='toself')
+    st.plotly_chart(fig_industry, use_container_width=True)
 
-st.markdown(
-    "💡 This radar chart shows which industries are hiring AI talent the most, helping users understand market demand across sectors."
-)
+with col_text:
+    st.markdown(
+        """
+        💡 This radar chart shows which industries are hiring AI talent the most. 
+    It helps users quickly identify high-demand sectors and understand market trends for AI roles.
+        """
+    )
+
+st.divider()
 
 # ---------------- Detailed Description ---------------- #
 st.divider()
