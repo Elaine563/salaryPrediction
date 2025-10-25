@@ -98,38 +98,22 @@ with col_chart:
     st.plotly_chart(fig_industry, use_container_width=True)
 
 with col_text:
-    st.markdown(
-        """
-        💡 This radar chart shows which industries are hiring AI talent the most. 
-    It helps users quickly identify high-demand sectors and understand market trends for AI roles.
-        """
-    )
+    # Identify top industry dynamically
+    if not industry_counts.empty:
+        top_industry = industry_counts.iloc[0]["Industry"]
+        top_count = industry_counts.iloc[0]["Count"]
+        st.markdown(
+            f"""
+            💡 **Insights:**  
+            - The **{top_industry}** industry has the highest number of AI job postings ({top_count} jobs).  
+            - Other industries show emerging demand; users can spot growing sectors easily.  
+            - Use this chart to target career opportunities or understand competitive hiring markets.  
+            🌟 Quickly see which sectors are leading in AI hiring!
+            """
+        )
+    else:
+        st.markdown("💡 No industry data available for this selection.")
 
-st.divider()
-# ---------------- Remote Ratio ---------------- #
-st.subheader("🏠 Remote Work Ratio")
-col_chart, col_text = st.columns([3, 2])
-
-with col_chart:
-    remote_counts = df_filtered["remote_ratio"].value_counts().reset_index()
-    remote_counts.columns = ["Remote %", "Count"]
-
-    fig_remote = px.pie(
-        remote_counts, 
-        names="Remote %", 
-        values="Count", 
-        hole=0.4, 
-        color_discrete_sequence=px.colors.sequential.Pinkyl
-    )
-    st.plotly_chart(fig_remote, use_container_width=True)
-
-with col_text:
-    st.markdown(
-        """
-        💡 This chart shows the proportion of AI-related jobs that allow remote work. 
-        Higher percentages indicate more remote opportunities for job seekers.
-        """
-    )
 
 # ---------------- Detailed Description ---------------- #
 st.divider()
