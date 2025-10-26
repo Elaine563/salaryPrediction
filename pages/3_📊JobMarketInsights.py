@@ -53,10 +53,10 @@ with col_map:
     map_fig.update_layout(
         title=None,  # Remove chart title
         geo=dict(
-            showframe=False,
+            showframe=True,
             showcoastlines=True,
             projection_type="natural earth",
-            bgcolor="rgba(1,1,1,1)"
+            bgcolor="rgba(0,0,0,0)"
         ),
         margin=dict(l=0, r=0, t=0, b=0),
         coloraxis_colorbar=dict(title="Number of People")
