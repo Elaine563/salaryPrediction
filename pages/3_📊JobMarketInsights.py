@@ -38,7 +38,7 @@ col_map, col_skills = st.columns([3, 1])
 with col_map:
     # st.markdown("#### ⚙️ Map of Employee Residence")
 
-    # country_counts = df_filtered.groupby("employee_residence").size().reset_index(name="count")
+    country_counts = df_filtered.groupby("employee_residence").size().reset_index(name="count")
     
     map_fig = px.choropleth(
         country_counts,
