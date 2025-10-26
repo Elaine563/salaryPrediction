@@ -36,7 +36,7 @@ col_map, col_skills = st.columns([3, 1])
 
 # ---------------- Map: Count of People ---------------- #
 with col_map:
-    # st.markdown("#### ⚙️ Map of Employee Residence")
+    st.markdown("#### ⚙️ Map of Employee Residence")
 
     country_counts = df_filtered.groupby("employee_residence").size().reset_index(name="count")
     
@@ -51,7 +51,7 @@ with col_map:
     )
     
     map_fig.update_layout(
-        title="Map of Employee Residence",  
+        title=None,  
         geo=dict(
             showframe=True,
             showcoastlines=True,
@@ -136,8 +136,8 @@ st.divider()
 st.markdown(
     """
     ## 🔎 Dashboard Insights
-    - The **map** highlights countries with the largest number of AI/ML employees. Darker red indicates a higher concentration of talent.
-    - The **ranking list** on the right shows the top 10 skills most requested by employers for the selected job role.
+    - The **Map** highlights countries with the largest number of AI/ML employees. Darker red indicates a higher concentration of talent.
+    - The **Ranking List** on the right shows the top 10 skills most requested by employers for the selected job role.
     - The **Industry Radar Chart** shows which sectors demand AI skills the most.
     - By selecting different job titles, you can explore which skills are most demanded in different roles and where talent is concentrated globally.
     - This visualization helps both **job seekers** and **employers** understand market demand trends, identify skill gaps, and make data-driven decisions.
