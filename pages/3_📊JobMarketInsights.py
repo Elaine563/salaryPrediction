@@ -56,7 +56,7 @@ with col_map:
             showframe=False,
             showcoastlines=True,
             projection_type="natural earth",
-            bgcolor="rgba(0,0,0,0)"
+            bgcolor="rgba(1,1,1,1)"
         ),
         margin=dict(l=0, r=0, t=0, b=0),
         coloraxis_colorbar=dict(title="Number of People")
