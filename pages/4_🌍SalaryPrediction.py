@@ -4,6 +4,7 @@ import pickle
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import joblib
+import os
 
 st.set_page_config(
     page_title="Annual Salary Prediction for AI Job",
@@ -91,31 +92,20 @@ def encode_input(job_title, experience_level, employment_type,
     return input_data
 
 # ==================== MODEL LOAD ==================== #
-# ==================== MODEL LOAD ==================== #
-import os
-
-# Determine the folder of the current script
 BASE_DIR = os.path.dirname(__file__)
-
-# Paths to your files
 MODEL_PATH = os.path.join(BASE_DIR, "salary_predictor.pkl")
 ENCODER_PATH = os.path.join(BASE_DIR, "label_encoders.pkl")
 
 try:
-    # Load model with pickle
+    # load model
     with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
 
-    # Load label encoders with joblib
+    # load encoders (use joblib if saved with joblib)
     label_encoders = joblib.load(ENCODER_PATH)
 
-except FileNotFoundError as e:
-    st.error(
-        f"❌ Model or Label Encoder missing!\n"
-        f"Make sure the following files exist in the same folder as this script:\n"
-        f"- salary_predictor.pkl\n"
-        f"- label_encoders.pkl\n\nError: {e}"
-    )
+except Exception as e:
+    st.error(f"❌ Model or Label Encoder missing!\nCheck files in folder {BASE_DIR}\nError: {e}")
     st.stop()
 
 # ==================== PREDICTION ==================== #
