@@ -91,13 +91,31 @@ def encode_input(job_title, experience_level, employment_type,
     return input_data
 
 # ==================== MODEL LOAD ==================== #
+# ==================== MODEL LOAD ==================== #
+import os
+
+# Determine the folder of the current script
+BASE_DIR = os.path.dirname(__file__)
+
+# Paths to your files
+MODEL_PATH = os.path.join(BASE_DIR, "salary_predictor.pkl")
+ENCODER_PATH = os.path.join(BASE_DIR, "label_encoders.pkl")
+
 try:
-    with open("salary_predictor.pkl", "rb") as f:
+    # Load model with pickle
+    with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
-    with open("label_encoders.pkl", "rb") as f:
-        label_encoders = pickle.load(f)
-except:
-    st.error("❌ Model or Label Encoder missing!")
+
+    # Load label encoders with joblib
+    label_encoders = joblib.load(ENCODER_PATH)
+
+except FileNotFoundError as e:
+    st.error(
+        f"❌ Model or Label Encoder missing!\n"
+        f"Make sure the following files exist in the same folder as this script:\n"
+        f"- salary_predictor.pkl\n"
+        f"- label_encoders.pkl\n\nError: {e}"
+    )
     st.stop()
 
 # ==================== PREDICTION ==================== #
