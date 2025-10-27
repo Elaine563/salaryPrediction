@@ -10,6 +10,9 @@ st.set_page_config(
     layout="wide"
 )
 
+model = joblib.load("pages/salary_model.pkl")
+encoder = joblib.load("pages/label_encoder.pkl")
+
 df = pd.read_csv("ai_job_dataset.csv")  # original dataset
 
 header_col1, header_col2 = st.columns([3, 1.2]) 
