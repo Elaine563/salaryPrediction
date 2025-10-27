@@ -92,9 +92,9 @@ def encode_input(job_title, experience_level, employment_type,
 
 # ==================== MODEL LOAD ==================== #
 try:
-    with open("pages/salary_predictor.pkl", "rb") as f:
+    with open("salary_predictor.pkl", "rb") as f:
         model = pickle.load(f)
-    with open("pages/label_encoders.pkl", "rb") as f:
+    with open("label_encoders.pkl", "rb") as f:
         label_encoders = pickle.load(f)
 except:
     st.error("❌ Model or Label Encoder missing!")
