@@ -3,6 +3,7 @@ import pandas as pd
 import pickle
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
+import joblib
 
 st.set_page_config(
     page_title="Annual Salary Prediction for AI Job",
@@ -10,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-model = joblib.load("pages/salary_predictor.pkl")
+model = pickle.load("pages/salary_predictor.pkl")
 encoder = joblib.load("pages/label_encoders.pkl")
 
 df = pd.read_csv("ai_job_dataset.csv")  # original dataset
