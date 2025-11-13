@@ -1,7 +1,10 @@
 streamlit
+streamlit-lottie
+requests
 pandas
 numpy
-joblib
-plotly
 scikit-learn
 catboost
+plotly
+fpdf2
+joblib
