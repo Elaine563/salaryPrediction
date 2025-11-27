@@ -1,0 +1,15 @@
+streamlit
+streamlit-lottie
+requests
+pandas
+numpy
+fpdf2
+streamlit-lottie
+plotly
+catboost
+catboost
+plotly
+fpdf2
+joblib
+scikit-learn
+
