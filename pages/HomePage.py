@@ -94,7 +94,7 @@ st.markdown(
 # Direct Go button to About Us page
 if st.button("→ Go to About Us", key="btn_about_direct"):
     try:
-        st.switch_page("pages/AboutUs.py")
+        st.switch_page("pages/1 🔍 AboutUs.py")
     except st.errors.StreamlitAPIException:
         st.error("⚠️ Page not found: `pages/AboutUs.py`. Ensure it exists in the `pages/` folder.")
 st.markdown("---")
