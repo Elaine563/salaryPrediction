@@ -2,7 +2,11 @@ import os
 import streamlit as st
 
 # --- PAGE CONFIG ---
+<<<<<<< HEAD
 st.set_page_config(page_title="🔍 About Us | Future of Jobs Dashboard", page_icon="👥", layout="wide")
+=======
+st.set_page_config(page_title="About Us | Future of Jobs Dashboard", page_icon="👥", layout="wide")
+>>>>>>> elaine-feature
 
 # -------------------- TOP BANNER --------------------
 st.image(
@@ -21,8 +25,13 @@ team_members = [
         "role": "Project Lead & Data Scientist",
         "bio": "Loves transforming data into actionable insights. Passionate about machine learning, storytelling, and solving real-world problems.",
         "skills": "Python, Machine Learning, Data Visualization, SQL",
+<<<<<<< HEAD
         "linkedin": "https://www.linkedin.com/in/lim-jun-zhe-nathan-6932aa25a/",
         "github": "https://github.com/Nathannnn71",
+=======
+        "linkedin": "https://linkedin.com/in/your-profile",
+        "github": "https://github.com/your-profile",
+>>>>>>> elaine-feature
         "image": os.path.join(base_image_path, "junzhe.png")
     },
     {
@@ -30,8 +39,13 @@ team_members = [
         "role": "Full Stack Developer",
         "bio": "Enjoys crafting smooth, interactive web experiences that connect people and data intuitively.",
         "skills": "Streamlit, React, Python, PostgreSQL",
+<<<<<<< HEAD
         "linkedin": "https://www.linkedin.com/in/tingwen-goh/",
         "github": "https://github.com/wmint9220",
+=======
+        "linkedin": "https://linkedin.com/in/member2",
+        "github": "https://github.com/member2",
+>>>>>>> elaine-feature
         "image": os.path.join(base_image_path, "wenting.png")
     },
     {
@@ -48,8 +62,13 @@ team_members = [
         "role": "Data Analyst",
         "bio": "Passionate about uncovering patterns in data and turning them into stories people can see and understand.",
         "skills": "Pandas, Data Mining, Tableau, Statistics",
+<<<<<<< HEAD
         "linkedin": "https://www.linkedin.com/in/laurisya-nagarajan-b85089354/",
         "github": "https://github.com/Isya1406",
+=======
+        "linkedin": "https://linkedin.com/in/member3",
+        "github": "https://github.com/member3",
+>>>>>>> elaine-feature
         "image": os.path.join(base_image_path, "isya.png")
     }
 ]
