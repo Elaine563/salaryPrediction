@@ -148,8 +148,13 @@ with tab3:
     st.subheader("📊 Salary Distribution by Experience Level")
 
     if "experience_level" in df.columns:
+        # Ensure the DataFrame is sorted by experience level in the desired order before plotting
+        experience_order = ["EN", "MI", "SE", "EX"]
+        df_sorted = df.copy()
+        df_sorted["experience_level"] = pd.Categorical(df_sorted["experience_level"], categories=experience_order, ordered=True)
+        df_sorted = df_sorted.sort_values("experience_level")
         violin_fig = px.violin(
-            df,
+            df_sorted,
             x="experience_level",
             y="converted_salary",
             box=True,
@@ -160,13 +165,12 @@ with tab3:
         )
         st.plotly_chart(violin_fig, width='stretch')
 
-        # --- Enhanced Explanation with Statistics --- #
         exp_stats = df.groupby("experience_level")['converted_salary'].agg(['count','mean','median','min','max']).reset_index()
         st.markdown("<b>Statistics by Experience Level:</b>", unsafe_allow_html=True)
         st.dataframe(exp_stats)
 
         CURRENCY_RATES = { 
-            
+
             "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"}, 
             "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"}, 
         }
@@ -181,8 +185,8 @@ with tab3:
         st.markdown(f"""
         The violin plot above shows the salary distribution for different experience levels:
         - <b>EN (Entry-Level)</b>: Median salary is {currency_symbol}{get_stat('EN','median'):.0f}, with {get_stat('EN','count')} records.
-        - <b>SE (Senior)</b>: Median salary is {currency_symbol}{get_stat('SE','median'):.0f}, with {get_stat('SE','count')} records.
         - <b>MI (Mid-Level)</b>: Median salary is {currency_symbol}{get_stat('MI','median'):.0f}, with {get_stat('MI','count')} records.
+        - <b>SE (Senior)</b>: Median salary is {currency_symbol}{get_stat('SE','median'):.0f}, with {get_stat('SE','count')} records.
         - <b>EX (Executive)</b>: Median salary is {currency_symbol}{get_stat('EX','median'):.0f}, with {get_stat('EX','count')} records.
         <br><br>
         Senior and Executive levels show higher median and maximum salaries, while Entry-Level and Mid-Level have lower ranges. This highlights the impact of experience on salary growth in AI-related roles.
@@ -194,13 +198,19 @@ with tab4:
     st.subheader("💰 Average Salary by Company Size")
 
     if "company_size" in df.columns:
-        company_salary = df.groupby("company_size")["converted_salary"].mean().reset_index()
+        # Sort company_salary by company size
+        company_order = ["S", "M", "L"]
+        company_salary = df.groupby("company_size")["converted_salary"].mean().reindex(company_order).reset_index()
         bar_fig = px.bar(
             company_salary,
             x="company_size",
             y="converted_salary",
-            color="converted_salary",
-            color_continuous_scale="Blues",
+            color="company_size",
+            color_discrete_map={
+                "S": "#A7C7E7",  
+                "M": "#4682B4",   
+                "L": "#0D1A26"    
+            },
             labels={"company_size": "Company Size", "converted_salary": f"Average Salary ({currency_type})"}
         )
         st.plotly_chart(bar_fig, width='stretch')
@@ -210,24 +220,22 @@ with tab4:
         CURRENCY_RATES = { "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"}, "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"}, }
         currency_symbol = CURRENCY_RATES[currency_type]['symbol']
 
-        # Extract salary values safely
-        salary_L = company_salary.loc[company_salary['company_size']=='L','converted_salary'].values
-        salary_M = company_salary.loc[company_salary['company_size']=='M','converted_salary'].values
+        # Extract salary values 
         salary_S = company_salary.loc[company_salary['company_size']=='S','converted_salary'].values
+        salary_M = company_salary.loc[company_salary['company_size']=='M','converted_salary'].values
+        salary_L = company_salary.loc[company_salary['company_size']=='L','converted_salary'].values
 
-        salary_L = salary_L[0] if len(salary_L) > 0 else 0
-        salary_M = salary_M[0] if len(salary_M) > 0 else 0
         salary_S = salary_S[0] if len(salary_S) > 0 else 0
+        salary_M = salary_M[0] if len(salary_M) > 0 else 0
+        salary_L = salary_L[0] if len(salary_L) > 0 else 0
         top_salary = company_salary['converted_salary'].max()
 
         st.write("The chart above compares the average salary across different company sizes.")
-        st.write(f"Large companies (L) have an average salary of **{currency_symbol}{salary_L:,.0f}**.")
-        st.write(f"Medium companies (M) offer around **{currency_symbol}{salary_M:,.0f}**.")
         st.write(f"Small companies (S) provide an average salary of **{currency_symbol}{salary_S:,.0f}**.")
+        st.write(f"Medium companies (M) offer around **{currency_symbol}{salary_M:,.0f}**.")
+        st.write(f"Large companies (L) have an average salary of **{currency_symbol}{salary_L:,.0f}**.")
         st.write(f"Overall, larger companies tend to offer higher pay, with the highest recorded salary reaching **{currency_symbol}{top_salary:,.0f}**.")
         st.write("Smaller companies may offer lower averages but often provide other advantages such as flexibility or broader roles.")
-
-
 
 # ---------------- Tab 5: Salary by Years of Experience & Education ---------------- #
 with tab5:
