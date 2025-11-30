@@ -291,6 +291,8 @@ with tab4:
         st.write(f"Overall, larger companies tend to offer higher pay, with the highest recorded salary reaching **{currency_symbol}{top_salary:,.0f}**.")
         st.write("Smaller companies may offer lower averages but often provide other advantages such as flexibility or broader roles.")
 
+
+
 # ---------------- Tab 5: Salary by Years of Experience & Education ---------------- #
 with tab5:
     st.subheader("📚 Salary by Years of Experience & Education")
