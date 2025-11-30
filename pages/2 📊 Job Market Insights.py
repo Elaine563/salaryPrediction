@@ -166,6 +166,7 @@ with tab3:
         st.dataframe(exp_stats)
 
         CURRENCY_RATES = { 
+            
             "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"}, 
             "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"}, 
         }
