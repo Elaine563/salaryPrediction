@@ -164,28 +164,29 @@ with tab3:
         exp_stats = df.groupby("experience_level")['converted_salary'].agg(['count','mean','median','min','max']).reset_index()
         st.markdown("<b>Statistics by Experience Level:</b>", unsafe_allow_html=True)
         st.dataframe(exp_stats)
-        st.markdown(
-            """
-            The violin plot above shows the salary distribution for different experience levels:
-            - <b>EN (Entry-Level)</b>: Median salary is ${:.0f}, with {} records.
-            - <b>SE (Senior)</b>: Median salary is ${:.0f}, with {} records.
-            - <b>MI (Mid-Level)</b>: Median salary is ${:.0f}, with {} records.
-            - <b>EX (Executive)</b>: Median salary is ${:.0f}, with {} records.
-            <br><br>
-            Senior and Executive levels show higher median and maximum salaries, while Entry-Level and Mid-Level have lower ranges. This highlights the impact of experience on salary growth in AI-related roles.
-            """.format(
-                exp_stats.loc[exp_stats['experience_level']=='EN','median'].values[0] if 'EN' in exp_stats['experience_level'].values else 0,
-                exp_stats.loc[exp_stats['experience_level']=='EN','count'].values[0] if 'EN' in exp_stats['experience_level'].values else 0,
-                exp_stats.loc[exp_stats['experience_level']=='SE','median'].values[0] if 'SE' in exp_stats['experience_level'].values else 0,
-                exp_stats.loc[exp_stats['experience_level']=='SE','count'].values[0] if 'SE' in exp_stats['experience_level'].values else 0,
-                exp_stats.loc[exp_stats['experience_level']=='MI','median'].values[0] if 'MI' in exp_stats['experience_level'].values else 0,
-                exp_stats.loc[exp_stats['experience_level']=='MI','count'].values[0] if 'MI' in exp_stats['experience_level'].values else 0,
-                exp_stats.loc[exp_stats['experience_level']=='EX','median'].values[0] if 'EX' in exp_stats['experience_level'].values else 0,
-                exp_stats.loc[exp_stats['experience_level']=='EX','count'].values[0] if 'EX' in exp_stats['experience_level'].values else 0,
-            ), unsafe_allow_html=True
-        )
-    else:
-        st.warning("Experience level data is not available.")
+
+        CURRENCY_RATES = { 
+            "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"}, 
+            "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"}, 
+        }
+        currency_symbol = CURRENCY_RATES[currency_type]['symbol']
+
+        # Get median and count safely with fallback to 0
+        def get_stat(level, col):
+            if level in exp_stats['experience_level'].values:
+                return exp_stats.loc[exp_stats['experience_level']==level, col].values[0]
+            return 0
+
+        st.markdown(f"""
+        The violin plot above shows the salary distribution for different experience levels:
+        - <b>EN (Entry-Level)</b>: Median salary is {currency_symbol}{get_stat('EN','median'):.0f}, with {get_stat('EN','count')} records.
+        - <b>SE (Senior)</b>: Median salary is {currency_symbol}{get_stat('SE','median'):.0f}, with {get_stat('SE','count')} records.
+        - <b>MI (Mid-Level)</b>: Median salary is {currency_symbol}{get_stat('MI','median'):.0f}, with {get_stat('MI','count')} records.
+        - <b>EX (Executive)</b>: Median salary is {currency_symbol}{get_stat('EX','median'):.0f}, with {get_stat('EX','count')} records.
+        <br><br>
+        Senior and Executive levels show higher median and maximum salaries, while Entry-Level and Mid-Level have lower ranges. This highlights the impact of experience on salary growth in AI-related roles.
+        """, unsafe_allow_html=True)
+
 
 # ---------------- Tab 4: Average Salary by Company Size ---------------- #
 with tab4:
@@ -202,26 +203,30 @@ with tab4:
             labels={"company_size": "Company Size", "converted_salary": f"Average Salary ({currency_type})"}
         )
         st.plotly_chart(bar_fig, width='stretch')
-        # --- Enhanced Explanation with Statistics --- #
+
         st.markdown("<b>Company Size Salary Statistics:</b>", unsafe_allow_html=True)
         st.dataframe(company_salary)
-        st.markdown(
-            """
-            The bar chart shows the average salary by company size:
-            - <b>L (Large)</b>: Average salary is ${:.0f}
-            - <b>M (Medium)</b>: Average salary is ${:.0f}
-            - <b>S (Small)</b>: Average salary is ${:.0f}
-            <br><br>
-            Larger companies tend to offer higher salaries, with large companies averaging ${:.0f}. Small companies show more variability and may offer lower average salaries, but can provide other benefits such as flexibility or broader responsibilities.
-            """.format(
-                company_salary.loc[company_salary['company_size']=='L','converted_salary'].values[0] if 'L' in company_salary['company_size'].values else 0,
-                company_salary.loc[company_salary['company_size']=='M','converted_salary'].values[0] if 'M' in company_salary['company_size'].values else 0,
-                company_salary.loc[company_salary['company_size']=='S','converted_salary'].values[0] if 'S' in company_salary['company_size'].values else 0,
-                company_salary['converted_salary'].max()
-            ), unsafe_allow_html=True
-        )
-    else:
-        st.warning("Company size data is not available.")
+        CURRENCY_RATES = { "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"}, "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"}, }
+        currency_symbol = CURRENCY_RATES[currency_type]['symbol']
+
+        # Extract salary values safely
+        salary_L = company_salary.loc[company_salary['company_size']=='L','converted_salary'].values
+        salary_M = company_salary.loc[company_salary['company_size']=='M','converted_salary'].values
+        salary_S = company_salary.loc[company_salary['company_size']=='S','converted_salary'].values
+
+        salary_L = salary_L[0] if len(salary_L) > 0 else 0
+        salary_M = salary_M[0] if len(salary_M) > 0 else 0
+        salary_S = salary_S[0] if len(salary_S) > 0 else 0
+        top_salary = company_salary['converted_salary'].max()
+
+        st.write("The chart above compares the average salary across different company sizes.")
+        st.write(f"Large companies (L) have an average salary of **{currency_symbol}{salary_L:,.0f}**.")
+        st.write(f"Medium companies (M) offer around **{currency_symbol}{salary_M:,.0f}**.")
+        st.write(f"Small companies (S) provide an average salary of **{currency_symbol}{salary_S:,.0f}**.")
+        st.write(f"Overall, larger companies tend to offer higher pay, with the highest recorded salary reaching **{currency_symbol}{top_salary:,.0f}**.")
+        st.write("Smaller companies may offer lower averages but often provide other advantages such as flexibility or broader roles.")
+
+
 
 # ---------------- Tab 5: Salary by Years of Experience & Education ---------------- #
 with tab5:
@@ -245,20 +250,26 @@ with tab5:
         )
         st.plotly_chart(heatmap_fig, width='stretch')
 
-        # Add paragraph explanation
-        st.markdown(
-            """
-            <div style='font-size:18px; font-family:Arial; color:#F8F8F8; font-weight:600;'>
-            The heatmap above shows the highest average salary at <span style='color:#FFD700;'>${max_salary:,.0f}</span> for Executive-Level experience and Contract employment.<br>
-            This may suggest that Contract employment type is employed for certain projects and makes more frequent top-level decisions with Executive-Level positions.<br>
-            On the other hand, the lowest average salary is at <span style='color:#FF6347;'>${min_salary:,.0f}</span> for Entry-Level experience and Part-Time employment.<br>
-            This may suggest that Part-Time employment type is employed for less demanding and basic workloads in which they may also be supervised at the Entry-Level position.
-            </div>
-            """.format(
-                max_salary=heatmap_data['converted_salary'].max() if 'converted_salary' in heatmap_data.columns else 0,
-                min_salary=heatmap_data['converted_salary'].min() if 'converted_salary' in heatmap_data.columns else 0
-            ), unsafe_allow_html=True
+        CURRENCY_RATES = { "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"}, "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"}, }
+        currency_symbol = CURRENCY_RATES[currency_type]['symbol']
+
+        max_salary = heatmap_data['converted_salary'].max() if 'converted_salary' in heatmap_data.columns else 0
+        min_salary = heatmap_data['converted_salary'].min() if 'converted_salary' in heatmap_data.columns else 0
+
+        st.write(
+            "The heatmap above shows the highest average salary for Executive-Level experience and Contract employment at",
+            f"{currency_symbol}{max_salary:,.0f}")
+        
+        st.write(
+            "This may suggest that Contract employment type is employed for certain projects and makes more frequent top-level decisions with Executive-Level positions. "
+            "On the other hand, the lowest average salary for Entry-Level experience and Part-Time employment is at",
+            f"{currency_symbol}{min_salary:,.0f}")
+
+        st.write(
+            "This may suggest that Part-Time employment type is employed for less demanding and basic workloads in which they may also be supervised at the Entry-Level position."
         )
+
+
     else:
         st.warning("Years of experience or education level data is not available.")
 

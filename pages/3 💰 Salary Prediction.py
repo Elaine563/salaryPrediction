@@ -19,6 +19,24 @@ st.set_page_config(
 df = pd.read_csv("ai_job_dataset.csv")  
 df.columns = df.columns.str.lower().str.strip()
 
+# ==================== CURRENCY CONVERSION RATES ==================== #
+CURRENCY_RATES = {
+    "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"},
+    "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"},
+    "EUR": {"symbol": "€", "rate": 0.92, "name": "Euro"},
+    "GBP": {"symbol": "£", "rate": 0.79, "name": "British Pound"},
+    "SGD": {"symbol": "S$", "rate": 1.34, "name": "Singapore Dollar"},
+    "JPY": {"symbol": "¥", "rate": 149.50, "name": "Japanese Yen"},
+    "AUD": {"symbol": "A$", "rate": 1.52, "name": "Australian Dollar"},
+    "CAD": {"symbol": "C$", "rate": 1.36, "name": "Canadian Dollar"},
+    "INR": {"symbol": "₹", "rate": 83.12, "name": "Indian Rupee"},
+    "CNY": {"symbol": "¥", "rate": 7.24, "name": "Chinese Yuan"}
+}
+
+# Initialize session state for currency
+if 'selected_currency' not in st.session_state:
+    st.session_state['selected_currency'] = 'USD'
+
 # ==================== CONSTANTS FOR NEW FEATURES ==================== #
 USD_TO_MYR = 4.13
 
@@ -111,8 +129,24 @@ Use this tool to:
 
 with header_col2:
     st.image("ai.png", width=350) 
+
+# ==================== CURRENCY SELECTOR ==================== #
+st.sidebar.header("💱 Currency Settings")
+selected_currency = st.sidebar.selectbox(
+    "Display Currency",
+    options=list(CURRENCY_RATES.keys()),
+    format_func=lambda x: f"{CURRENCY_RATES[x]['symbol']} {x} - {CURRENCY_RATES[x]['name']}",
+    index=list(CURRENCY_RATES.keys()).index(st.session_state['selected_currency'])
+)
+st.session_state['selected_currency'] = selected_currency
+
+currency_symbol = CURRENCY_RATES[selected_currency]['symbol']
+currency_rate = CURRENCY_RATES[selected_currency]['rate']
+
+st.sidebar.info(f"**Exchange Rate:** 1 USD = {currency_rate} {selected_currency}")
+st.sidebar.caption("💡 All predictions are calculated in USD and converted to your selected currency.")
     
-st.info("💡 *All salary values are predicted in USD and converted into MYR for convenience.*")
+st.info(f"💡 *All salary values are predicted in USD and displayed in {selected_currency} ({currency_symbol}).*")
 
 st.divider()
 
@@ -210,9 +244,11 @@ if st.button("Predict Salary"):
             salary_pred_usd = float(np.expm1(prediction_log))
 
             # ✅ Display results
-            st.success(f"Predicted Annual Salary: **${salary_pred_usd:,.2f} USD**")
-            salary_myr = salary_pred_usd * 4.7
-            st.info(f"🇲🇾 Equivalent Salary: **RM{salary_myr:,.2f} MYR**")
+            salary_converted = salary_pred_usd * currency_rate
+            st.success(f"Predicted Annual Salary: **{currency_symbol}{salary_converted:,.2f} {selected_currency}**")
+            
+            if selected_currency != 'USD':
+                st.info(f"💵 Equivalent in USD: **${salary_pred_usd:,.2f} USD**")
             
             # Store in session state for new features
             st.session_state['predicted_salary'] = salary_pred_usd
@@ -268,41 +304,39 @@ if 'predicted_salary' in st.session_state:
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("Your Monthly Salary", f"RM {(predicted_salary * USD_TO_MYR / 12):,.0f}")
+            st.metric("Your Monthly Salary", f"{currency_symbol} {(predicted_salary * currency_rate / 12):,.0f}")
         with col2:
             diff = predicted_salary - avg_market
-            st.metric("vs Market Avg", f"RM {(avg_market * USD_TO_MYR / 12):,.0f}", f"RM {(diff * USD_TO_MYR / 12):+,.0f}")
+            st.metric("vs Market Avg", f"{currency_symbol} {(avg_market * currency_rate / 12):,.0f}", f"{currency_symbol} {(diff * currency_rate / 12):+,.0f}")
         with col3:
-            st.metric("Market Range", f"RM {(min_market * USD_TO_MYR / 12):,.0f} - RM {(max_market * USD_TO_MYR / 12):,.0f}")
-        with col4:
             st.metric("Your Percentile", f"{percentile:.0f}th", 
                      "Above Avg" if percentile > 50 else "Below Avg")
         
         # Salary distribution visualization
         fig_dist = go.Figure()
         
-        # Convert salaries to MYR monthly for display
-        job_market_data_myr = (job_market_data * USD_TO_MYR) / 12
-        predicted_salary_myr = (predicted_salary * USD_TO_MYR) / 12
+        # Convert salaries to selected currency monthly for display
+        job_market_data_converted = (job_market_data * currency_rate) / 12
+        predicted_salary_converted = (predicted_salary * currency_rate) / 12
         
         fig_dist.add_trace(go.Histogram(
-            x=job_market_data_myr,
+            x=job_market_data_converted,
             name='Market Salaries',
             marker_color='lightblue',
             opacity=0.7,
             nbinsx=20
         ))
         fig_dist.add_vline(
-            x=predicted_salary_myr, 
+            x=predicted_salary_converted, 
             line_dash="dash", 
             line_color="red",
             line_width=3,
-            annotation_text=f"Your Salary: RM {predicted_salary_myr:,.0f}",
+            annotation_text=f"Your Salary: {currency_symbol} {predicted_salary_converted:,.0f}",
             annotation_position="top"
         )
         fig_dist.update_layout(
             title=f"Salary Distribution for {job_title_selected}",
-            xaxis_title="Monthly Salary (MYR)",
+            xaxis_title=f"Monthly Salary ({selected_currency})",
             yaxis_title="Number of Jobs",
             showlegend=False,
             height=400
@@ -313,6 +347,20 @@ if 'predicted_salary' in st.session_state:
     
     # ==================== SECTION 2: SKILLS GAP & CERTIFICATIONS ==================== #
     st.subheader("Boost Your Salary with Certifications")
+    
+    # ROI Analysis Description
+    with st.expander("ℹ️ **How to Use the ROI Analysis - Understanding Your Investment Value**", expanded=False):
+        st.markdown("""
+        ### Making Smart Decisions
+        The best courses are usually the ones that cost less but offer a meaningful salary improvement. These typically appear higher and further left on the chart, with larger bubble sizes indicating stronger value.
+        You will also see a summary of your total course cost, your estimated monthly salary increase, your potential new monthly salary, and the combined ROI of all selected courses.
+
+        ### How to Use This
+        Use the analysis to pick courses that offer strong career benefits at a reasonable price. Start with high-impact, affordable options and build from there. 
+        
+        **Remember**: These are market-based estimates. Actual results depend on your skills, job market, and how you apply your knowledge!
+        """)
+    
     st.write("Based on your job role, here are skills that can increase your earning potential:")
     
     # Get required skills for the job
@@ -347,7 +395,7 @@ if 'predicted_salary' in st.session_state:
                             "Course": course["name"],
                             "Duration": course["duration"],
                             "Fee (USD)": course["fee_usd"],
-                            "Fee (MYR)": course["fee_usd"] * USD_TO_MYR,
+                            "Fee (Local)": course["fee_usd"] * currency_rate,
                             "Impact": course["impact"],
                             "Salary Boost": course["salary_boost"],
                             "ROI": roi_value,
@@ -361,14 +409,14 @@ if 'predicted_salary' in st.session_state:
                 # ROI Bubble Chart
                 fig_roi = px.scatter(
                     rec_df,
-                    x="Fee (MYR)",
+                    x="Fee (Local)",
                     y="Salary Boost",
                     size="ROI",
                     color="Impact",
                     hover_data=["Course", "Skill", "Duration"],
                     color_discrete_map={"Foundation": "#3498db", "Medium": "#f39c12", "High": "#e74c3c"},
-                    title="Certification ROI Analysis: Cost vs Salary Impact",
-                    labels={"Fee (MYR)": "Course Fee (MYR)", "Salary Boost": "Monthly Salary Increase (MYR)"}
+                    title=f"Certification ROI Analysis: Cost vs Salary Impact ({selected_currency})",
+                    labels={"Fee (Local)": f"Course Fee ({selected_currency})", "Salary Boost": f"Annual Salary Increase (USD)"}
                 )
                 fig_roi.update_layout(height=500)
                 st.plotly_chart(fig_roi, use_container_width=True)
@@ -381,11 +429,11 @@ if 'predicted_salary' in st.session_state:
                 st.markdown("### Investment Summary")
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("Total Investment", f"RM {total_investment * USD_TO_MYR:,.0f}")
+                    st.metric("Total Investment", f"{currency_symbol} {(total_investment * currency_rate):,.0f}")
                 with col2:
-                    st.metric("Monthly Increase", f"+RM {(total_boost * USD_TO_MYR / 12):,.0f}", f"+{(total_boost/predicted_salary*100):.1f}%")
+                    st.metric("Monthly Increase", f"+{currency_symbol} {(total_boost * currency_rate / 12):,.0f}", f"+{(total_boost/predicted_salary*100):.1f}%")
                 with col3:
-                    st.metric("New Monthly Target", f"RM {(new_potential_salary * USD_TO_MYR / 12):,.0f}")
+                    st.metric("New Monthly Target", f"{currency_symbol} {(new_potential_salary * currency_rate / 12):,.0f}")
                 with col4:
                     overall_roi = total_boost / total_investment if total_investment > 0 else 999999
                     roi_display = f"{overall_roi:.1f}x" if overall_roi < 999999 else "Unlimited"
@@ -401,10 +449,10 @@ if 'predicted_salary' in st.session_state:
                         with col1:
                             st.markdown(f"**Duration:** {row['Duration']}")
                         with col2:
-                            fee_text = 'Free' if row['Fee (USD)'] == 0 else f"RM {row['Fee (MYR)']:.0f}"
+                            fee_text = 'Free' if row['Fee (USD)'] == 0 else f"{currency_symbol} {row['Fee (Local)']:.0f}"
                             st.markdown(f"**Fee:** {fee_text}")
                         with col3:
-                            st.markdown(f"**Salary Boost:** +RM {(row['Salary Boost'] * USD_TO_MYR / 12):,.0f}/month")
+                            st.markdown(f"**Salary Boost:** +{currency_symbol} {(row['Salary Boost'] * currency_rate / 12):,.0f}/month")
                         with col4:
                             roi_text = f"{row['ROI']:.1f}x" if row['ROI'] < 999999 else "Unlimited"
                             st.markdown(f"**ROI:** {roi_text}")
@@ -421,10 +469,10 @@ if 'predicted_salary' in st.session_state:
                     
                     pdf.set_font("Arial", '', 12)
                     pdf.cell(0, 8, f"Job Title: {job_title}", ln=True)
-                    pdf.cell(0, 8, f"Current Monthly Salary: RM {(current_salary * USD_TO_MYR / 12):,.0f}", ln=True)
-                    pdf.cell(0, 8, f"Potential Monthly Salary: RM {(potential_salary * USD_TO_MYR / 12):,.0f}", ln=True)
+                    pdf.cell(0, 8, f"Current Monthly Salary: {currency_symbol} {(current_salary * currency_rate / 12):,.0f} {selected_currency}", ln=True)
+                    pdf.cell(0, 8, f"Potential Monthly Salary: {currency_symbol} {(potential_salary * currency_rate / 12):,.0f} {selected_currency}", ln=True)
                     increase_pct = ((potential_salary - current_salary) / current_salary * 100)
-                    pdf.cell(0, 8, f"Potential Monthly Increase: RM {((potential_salary - current_salary) * USD_TO_MYR / 12):,.0f} ({increase_pct:.1f}%)", ln=True)
+                    pdf.cell(0, 8, f"Potential Monthly Increase: {currency_symbol} {((potential_salary - current_salary) * currency_rate / 12):,.0f} ({increase_pct:.1f}%)", ln=True)
                     pdf.ln(10)
                     
                     pdf.set_font("Arial", 'B', 14)
@@ -436,8 +484,8 @@ if 'predicted_salary' in st.session_state:
                         pdf.multi_cell(0, 6, 
                             f"Skill: {row['Skill']}\n" +
                             f"Course: {row['Course']}\n" +
-                            f"Duration: {row['Duration']} | Fee: RM {row['Fee (USD)'] * USD_TO_MYR:.0f} | Impact: {row['Impact']}\n" +
-                            f"Monthly Salary Boost: +RM {(row['Salary Boost'] * USD_TO_MYR / 12):,.0f}\n" +
+                            f"Duration: {row['Duration']} | Fee: {currency_symbol} {row['Fee (Local)']:.0f} | Impact: {row['Impact']}\n" +
+                            f"Monthly Salary Boost: +{currency_symbol} {(row['Salary Boost'] * currency_rate / 12):,.0f}\n" +
                             f"Link: {row['Link']}\n")
                         pdf.ln(3)
                     
@@ -461,7 +509,7 @@ if 'predicted_salary' in st.session_state:
     st.divider()
     
 # ==================== SECTION 3: REALISTIC NEXT STEP COMPANIES ==================== #
-    st.subheader("Target Companies for Your Next Career Move (Monthly Salary)")
+    st.subheader(f"Target Companies for Your Next Career Move (Monthly Salary in {selected_currency})")
     st.write(f"Companies offering salaries **5-30% higher** than your predicted salary for **{job_title_selected}** - realistic next steps:")
     
     # Get companies with salaries close to but higher than prediction
@@ -472,69 +520,86 @@ if 'predicted_salary' in st.session_state:
             # Filter companies with salary 5-30% higher than predicted
             lower_bound = predicted_salary * 1.05  # 5% higher
             upper_bound = predicted_salary * 1.30  # 30% higher
-            
+        
+        realistic_companies = job_companies[
+            (job_companies['salary_usd'] >= lower_bound) & 
+            (job_companies['salary_usd'] <= upper_bound)
+        ]
+        
+        # If not enough companies in range, expand the range
+        if len(realistic_companies) < 5:
+            lower_bound = predicted_salary * 1.00  # Same level
+            upper_bound = predicted_salary * 1.50  # Up to 50% higher
             realistic_companies = job_companies[
                 (job_companies['salary_usd'] >= lower_bound) & 
                 (job_companies['salary_usd'] <= upper_bound)
             ]
+        
+        # Get top 10 from this filtered set
+        top_companies = realistic_companies.nlargest(10, 'salary_usd')
+        
+        if not top_companies.empty:
+            # Convert to selected currency monthly for display
+            top_companies_display = top_companies.copy()
+            top_companies_display['monthly_salary_local'] = (top_companies_display['salary_usd'] * currency_rate) / 12
+            top_companies_display['increase_pct'] = ((top_companies_display['salary_usd'] - predicted_salary) / predicted_salary * 100)
             
-            # If not enough companies in range, expand the range
-            if len(realistic_companies) < 5:
-                lower_bound = predicted_salary * 1.00  # Same level
-                upper_bound = predicted_salary * 1.50  # Up to 50% higher
-                realistic_companies = job_companies[
-                    (job_companies['salary_usd'] >= lower_bound) & 
-                    (job_companies['salary_usd'] <= upper_bound)
-                ]
+            # compute monthly values first
+            pred_month = predicted_salary * currency_rate / 12
+            low_month = lower_bound * currency_rate / 12
+            high_month = upper_bound * currency_rate / 12
+
+            # format as currency strings
+            formatted_pred = f"{currency_symbol}{pred_month:,.0f}"
+            formatted_low = f"{currency_symbol}{low_month:,.0f}"
+            formatted_high = f"{currency_symbol}{high_month:,.0f}"
+
+            # display message (multi-line for readability)
+            st.info(
+                f"Your current monthly salary prediction: " 
+                f"{formatted_pred}" 
+            )
+            st.info(
+                f"Showing companies offering monthly salary: "
+                f"{formatted_low}  -  {formatted_high}"
+            )
+
+            # Bar chart of target companies
+            fig_companies = px.bar(
+                top_companies_display,
+                x='monthly_salary_local',
+                y='company_name',
+                orientation='h',
+                color='increase_pct',
+                hover_data=['company_location', 'increase_pct'],
+                title=f"Realistic Target Companies for {job_title_selected} (Monthly Salary in {selected_currency})",
+                labels={'monthly_salary_local': f'Monthly Salary ({selected_currency})', 'company_name': 'Company', 'increase_pct': 'Increase %'},
+                color_continuous_scale='Greens'
+            )
+            fig_companies.update_layout(height=500, showlegend=True)
+            st.plotly_chart(fig_companies, use_container_width=True)
             
-            # Get top 10 from this filtered set
-            top_companies = realistic_companies.nlargest(10, 'salary_usd')
-            
-            if not top_companies.empty:
-                # Convert to MYR monthly for display
-                top_companies_display = top_companies.copy()
-                top_companies_display['monthly_salary_myr'] = (top_companies_display['salary_usd'] * USD_TO_MYR) / 12
-                top_companies_display['increase_pct'] = ((top_companies_display['salary_usd'] - predicted_salary) / predicted_salary * 100)
-                
-                # Show salary range info
-                st.info(f"Your Current Prediction: **RM {(predicted_salary * USD_TO_MYR / 12):,.0f}/month** | Showing companies offering **RM {(lower_bound * USD_TO_MYR / 12):,.0f} - RM {(upper_bound * USD_TO_MYR / 12):,.0f}/month**")
-                
-                # Bar chart of target companies
-                fig_companies = px.bar(
-                    top_companies_display,
-                    x='monthly_salary_myr',
-                    y='company_name',
-                    orientation='h',
-                    color='increase_pct',
-                    hover_data=['company_location', 'increase_pct'],
-                    title=f"Realistic Target Companies for {job_title_selected} (Monthly Salary)",
-                    labels={'monthly_salary_myr': 'Monthly Salary (MYR)', 'company_name': 'Company', 'increase_pct': 'Increase %'},
-                    color_continuous_scale='Greens'
-                )
-                fig_companies.update_layout(height=500, showlegend=True)
-                st.plotly_chart(fig_companies, use_container_width=True)
-                
-                # Table view
-                st.markdown("### Detailed Company Information")
-                display_companies = top_companies_display.copy()
-                display_companies['salary_display'] = display_companies['monthly_salary_myr'].apply(lambda x: f"RM {x:,.0f}")
-                display_companies['increase_display'] = display_companies['increase_pct'].apply(lambda x: f"+{x:.1f}%")
-                display_companies['company_size'] = display_companies['company_size'].replace({'S': 'Small', 'M': 'Medium', 'L': 'Large'})
-                display_companies = display_companies[['company_name', 'salary_display', 'increase_display', 'company_location', 'company_size']]
-                display_companies = display_companies.rename(columns={
-                    'company_name': 'Company',
-                    'salary_display': 'Monthly Salary (MYR)',
-                    'increase_display': 'Salary Increase',
-                    'company_location': 'Location',
-                    'company_size': 'Size'
-                })
-                st.dataframe(display_companies, use_container_width=True, hide_index=True)
-            else:
-                st.warning("No companies found in the realistic salary range. Consider upskilling to reach higher salary brackets!")
+            # Table view
+            st.markdown("### Detailed Company Information")
+            display_companies = top_companies_display.copy()
+            display_companies['salary_display'] = display_companies['monthly_salary_local'].apply(lambda x: f"{currency_symbol} {x:,.0f}")
+            display_companies['increase_display'] = display_companies['increase_pct'].apply(lambda x: f"+{x:.1f}%")
+            display_companies['company_size'] = display_companies['company_size'].replace({'S': 'Small', 'M': 'Medium', 'L': 'Large'})
+            display_companies = display_companies[['company_name', 'salary_display', 'increase_display', 'company_location', 'company_size']]
+            display_companies = display_companies.rename(columns={
+                'company_name': 'Company',
+                'salary_display': f'Monthly Salary ({selected_currency})',
+                'increase_display': 'Salary Increase',
+                'company_location': 'Location',
+                'company_size': 'Size'
+            })
+            st.dataframe(display_companies, use_container_width=True, hide_index=True)
         else:
-            st.info("No company data available for this role.")
+            st.warning("No companies found in the realistic salary range. Consider upskilling to reach higher salary brackets!")
     else:
-        st.info("Company information not available in dataset.")
-    
-    st.markdown("---")
-    st.success("Next Steps: Choose certifications, target top companies, and plan your career progression!")
+        st.info("No company data available for this role.")
+else:
+    st.info("Company information not available in dataset.")
+
+st.markdown("---")
+st.success("Next Steps: Choose certifications, target top companies, and plan your career progression!")
