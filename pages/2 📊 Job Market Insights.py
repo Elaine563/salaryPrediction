@@ -7,6 +7,24 @@ st.set_page_config(page_title="Job Market Insights | Future of Jobs Dashboard", 
 # ---------------- Load Data ---------------- #
 df = pd.read_csv("ai_job_dataset.csv")
 
+# ==================== CURRENCY CONVERSION RATES ==================== #
+CURRENCY_RATES = {
+    "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"},
+    "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"},
+    "EUR": {"symbol": "€", "rate": 0.92, "name": "Euro"},
+    "GBP": {"symbol": "£", "rate": 0.79, "name": "British Pound"},
+    "SGD": {"symbol": "S$", "rate": 1.34, "name": "Singapore Dollar"},
+    "JPY": {"symbol": "¥", "rate": 149.50, "name": "Japanese Yen"},
+    "AUD": {"symbol": "A$", "rate": 1.52, "name": "Australian Dollar"},
+    "CAD": {"symbol": "C$", "rate": 1.36, "name": "Canadian Dollar"},
+    "INR": {"symbol": "₹", "rate": 83.12, "name": "Indian Rupee"},
+    "CNY": {"symbol": "¥", "rate": 7.24, "name": "Chinese Yuan"}
+}
+
+# Initialize session state for currency
+if 'selected_currency' not in st.session_state:
+    st.session_state['selected_currency'] = 'USD'
+
 # ---------------- Page Title & Description ---------------- #
 st.title("Job Market Insights Dashboard")
 st.markdown(
@@ -19,17 +37,27 @@ st.markdown(
     """, unsafe_allow_html=True
 )
 
-# ---------------- Currency Selection ---------------- #
-currency_type = st.radio(
-    "**Currency Selection**",
-    ["USD", "MYR"],
-    captions=["United States Dollar", "Malaysian Ringgit"],
-    horizontal=True
+# ==================== CURRENCY SELECTOR ==================== #
+st.sidebar.header("💱 Currency Settings")
+selected_currency = st.sidebar.selectbox(
+    "Display Currency",
+    options=list(CURRENCY_RATES.keys()),
+    format_func=lambda x: f"{CURRENCY_RATES[x]['symbol']} {x} - {CURRENCY_RATES[x]['name']}",
+    index=list(CURRENCY_RATES.keys()).index(st.session_state['selected_currency'])
 )
-conversion_rates = {"USD": 1, "MYR": 4.13}
-conversion_rate = conversion_rates[currency_type]
+st.session_state['selected_currency'] = selected_currency
+
+currency_symbol = CURRENCY_RATES[selected_currency]['symbol']
+currency_rate = CURRENCY_RATES[selected_currency]['rate']
+
+st.sidebar.info(f"**Exchange Rate:** 1 USD = {currency_rate} {selected_currency}")
+st.sidebar.caption("💡 All data is calculated in USD and converted to your selected currency.")
+
+st.info(f"💡 *All salary values are displayed in {selected_currency} ({currency_symbol}).*")
+
+# Convert salary data
 if "salary_usd" in df.columns:
-    df["converted_salary"] = df["salary_usd"] * conversion_rate
+    df["converted_salary"] = df["salary_usd"] * currency_rate
 
 # ---------------- Global Job Title Filter ---------------- #
 st.markdown("### 🔍 Filter by Job Title")
@@ -53,10 +81,8 @@ with tab1:
     st.info(f"Displaying insights for: **{selected_job}**. Total records: {len(df_filtered)}")
     col_map, col_skills = st.columns([3, 1])
 
-    # ---------------- Map: Count of People ---------------- #
     with col_map:
         st.markdown("#### ⚙️ Map of Employee Residence")
-        # --- Guidance Dropdown for Map --- #
         with st.expander("🛈 Understanding the Map", expanded=False):
             st.markdown("""
             - **Color Intensity**: Darker shades indicate a higher number of employees in that country.
@@ -85,9 +111,8 @@ with tab1:
             margin=dict(l=0, r=0, t=0, b=0),
             coloraxis_colorbar=dict(title="Number of People")
         )
-        st.plotly_chart(map_fig, width='stretch')
+        st.plotly_chart(map_fig, use_container_width=True)
 
-        # --- Dynamic Explanation based on selected job title --- #
         if selected_job != "All" and not country_counts.empty:
             top_country = country_counts.sort_values("count", ascending=False).iloc[0]["employee_residence"]
             low_country = country_counts.sort_values("count", ascending=True).iloc[0]["employee_residence"]
@@ -102,10 +127,8 @@ with tab1:
                 "indicating potential opportunities for growth and development in the AI sector."
             )
 
-    # ---------------- Top 10 Skills as a Ranked List ---------------- #
     with col_skills:
         st.markdown("#### Top 10 Skills")
-        # --- Guidance Dropdown for Top Skills --- #
         with st.expander("🛈 Understanding the Top Skills List", expanded=False):
             st.markdown("""
             - **Ranking**: Skills are ranked by how often they appear in job postings for the selected role.
@@ -127,63 +150,56 @@ with tab1:
 # ---------------- Tab 2: Job Distribution by Industry ---------------- #
 with tab2:
     st.subheader("🏭 Job Distribution by Industry")
-    col_chart, col_text_table = st.columns([3, 2])
+    
+    with st.expander("🛈 Understanding the Radar Chart", expanded=False):
+        st.markdown("""
+        - **Shape & Area**: Larger areas indicate industries with more job opportunities for the selected role.
+        - **Color Intensity**: Stronger colors mean higher demand.
+        - **Interpretation**: Focus on industries with larger areas for more opportunities; smaller areas may represent niche or emerging sectors.
+        
+        To view a radar chart, identify the center point from which all axes radiate, like spokes on a wheel. Each axis represents a different industry, and the scale increases as you move away from the center. Look at the nodes on each axis to see the value for that industry, then connect the nodes to see the shape of the data series and how it compares to others.
+        """)
+    industry_counts = df_filtered["industry"].value_counts().reset_index()
+    industry_counts.columns = ["Industry", "Count"]
+    if not industry_counts.empty:
+        fig_industry = px.line_polar(
+            industry_counts,
+            r="Count",
+            theta="Industry",
+            line_close=True,
+            template="plotly_dark",
+            color_discrete_sequence=["#B22222"]
+        )
+        fig_industry.update_traces(
+            fill='toself',
+            fillcolor='rgba(255, 76, 76, 0.3)',
+            line=dict(color='#FF1A1A', width=3)
+        )
+        fig_industry.update_layout(
+            height=600,
+            margin=dict(l=20, r=20, t=20, b=20)
+        )
+        st.plotly_chart(fig_industry, use_container_width=True)
 
-    # ---------------- Radar Chart ---------------- #
-    with col_chart:
-        # --- Guidance Dropdown for Radar Chart --- #
-        with st.expander("🛈 Understanding the Radar Chart", expanded=False):
-            st.markdown("""
-            - **Shape & Area**: Larger areas indicate industries with more job opportunities for the selected role.
-            - **Color Intensity**: Stronger colors mean higher demand.
-            - **Interpretation**: Focus on industries with larger areas for more opportunities; smaller areas may represent niche or emerging sectors.
-            
-            To view a radar chart, identify the center point from which all axes radiate, like spokes on a wheel. Each axis represents a different industry, and the scale increases as you move away from the center. Look at the nodes on each axis to see the value for that industry, then connect the nodes to see the shape of the data series and how it compares to others.
-            """)
-        industry_counts = df_filtered["industry"].value_counts().reset_index()
-        industry_counts.columns = ["Industry", "Count"]
-        if not industry_counts.empty:
-            fig_industry = px.line_polar(
-                industry_counts,
-                r="Count",
-                theta="Industry",
-                line_close=True,
-                template="plotly_dark",
-                color_discrete_sequence=["#B22222"]
-            )
-            fig_industry.update_traces(
-                fill='toself',
-                fillcolor='rgba(255, 76, 76, 0.3)',
-                line=dict(color='#FF1A1A', width=3)
-            )
-            fig_industry.update_layout(
-                height=600,
-                width=800,
-                margin=dict(l=20, r=20, t=20, b=20)
-            )
-            st.plotly_chart(fig_industry, width='stretch')
-
-            # --- Dynamic Explanation based on selected job title --- #
-            if selected_job != "All" and not industry_counts.empty:
-                top_industry = industry_counts.iloc[0]["Industry"]
-                low_industry = industry_counts.iloc[-1]["Industry"]
-                st.write(f"For the job title '{selected_job}', the highest demand is in the {top_industry} industry, while the lowest is in {low_industry}.")
-                st.write(f"This means that most '{selected_job}' positions are found in the {top_industry} sector, which may offer more opportunities, resources, and career growth for this role. On the other hand, the {low_industry} industry has the fewest positions for '{selected_job}', indicating limited demand or specialized requirements in that sector.")
-                st.write(f"If you are pursuing a career as a '{selected_job}', consider focusing your job search, networking, and skill development in industries with higher demand such as {top_industry}. Exploring the reasons behind lower demand in industries like {low_industry} can also help you identify niche opportunities or areas for future growth.")
-            else:
-                st.write(
-                    "The radar chart above illustrates the distribution of AI-related jobs across various industries. Industries such as Technology and Healthcare dominate the chart, "
-                    "indicating their significant demand for AI professionals. This trend reflects the growing integration of AI in these sectors, where it is used to enhance operational efficiency, "
-                    "drive innovation, and improve decision-making processes. Conversely, industries with smaller areas on the chart may represent emerging opportunities for AI applications, "
-                    "highlighting potential areas for growth and investment."
-                )
+        if selected_job != "All" and not industry_counts.empty:
+            top_industry = industry_counts.iloc[0]["Industry"]
+            low_industry = industry_counts.iloc[-1]["Industry"]
+            st.write(f"For the job title '{selected_job}', the highest demand is in the {top_industry} industry, while the lowest is in {low_industry}.")
+            st.write(f"This means that most '{selected_job}' positions are found in the {top_industry} sector, which may offer more opportunities, resources, and career growth for this role. On the other hand, the {low_industry} industry has the fewest positions for '{selected_job}', indicating limited demand or specialized requirements in that sector.")
+            st.write(f"If you are pursuing a career as a '{selected_job}', consider focusing your job search, networking, and skill development in industries with higher demand such as {top_industry}. Exploring the reasons behind lower demand in industries like {low_industry} can also help you identify niche opportunities or areas for future growth.")
         else:
-            st.warning("⚠️ No industry data available for this selection.")
+            st.write(
+                "The radar chart above illustrates the distribution of AI-related jobs across various industries. Industries such as Technology and Healthcare dominate the chart, "
+                "indicating their significant demand for AI professionals. This trend reflects the growing integration of AI in these sectors, where it is used to enhance operational efficiency, "
+                "drive innovation, and improve decision-making processes. Conversely, industries with smaller areas on the chart may represent emerging opportunities for AI applications, "
+                "highlighting potential areas for growth and investment."
+            )
+    else:
+        st.warning("⚠️ No industry data available for this selection.")
 
 # ---------------- Tab 3: Salary Distribution by Experience Level ---------------- #
 with tab3:
     st.subheader("📊 Salary Distribution by Experience Level")
-    # --- Guidance Dropdown for Violin Plot --- #
     with st.expander("🛈 Understanding the Violin Plot", expanded=False):
         st.markdown("""
         - **Shape**: Wider sections show where most salaries fall for each experience level.
@@ -193,7 +209,6 @@ with tab3:
         To view a violin plot, look for the width of each section—wider areas mean more data points at that salary range. The box in the center shows the middle 50% of salaries, and the dots represent individual salaries. Compare the shapes across experience levels to see how salary distributions differ.
         """)
     if "experience_level" in df_filtered.columns:
-        # Ensure the DataFrame is sorted by experience level in the desired order before plotting
         experience_order = ["EN", "MI", "SE", "EX"]
         df_exp = df_filtered.copy()
         df_exp["experience_level"] = pd.Categorical(df_exp["experience_level"], categories=experience_order, ordered=True)
@@ -206,43 +221,29 @@ with tab3:
             points="all",
             color="experience_level",
             color_discrete_sequence=px.colors.qualitative.Set2,
-            labels={"experience_level": "Experience Level", "converted_salary": f"Salary ({currency_type})"}
+            labels={"experience_level": "Experience Level", "converted_salary": f"Salary ({selected_currency})"}
         )
-        st.plotly_chart(violin_fig, width='stretch')
+        st.plotly_chart(violin_fig, use_container_width=True)
 
-        # --- Enhanced Explanation with Statistics --- #
         exp_stats = df_exp.groupby("experience_level")['converted_salary'].agg(['count','mean','median','min','max']).reset_index()
         st.markdown("<b>Statistics by Experience Level:</b>", unsafe_allow_html=True)
         st.dataframe(exp_stats)
 
-        CURRENCY_RATES = { 
-
-            "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"}, 
-            "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"}, 
-        }
-        currency_symbol = CURRENCY_RATES[currency_type]['symbol']
-
-        # Get median and count safely with fallback to 0
         def get_stat(level, col):
             if level in exp_stats['experience_level'].values:
                 return exp_stats.loc[exp_stats['experience_level']==level, col].values[0]
             return 0
 
-        st.markdown(f"""
-        The violin plot above shows the salary distribution for different experience levels:
-        - <b>EN (Entry-Level)</b>: Median salary is {currency_symbol}{get_stat('EN','median'):.0f}, with {get_stat('EN','count')} records.
-        - <b>MI (Mid-Level)</b>: Median salary is {currency_symbol}{get_stat('MI','median'):.0f}, with {get_stat('MI','count')} records.
-        - <b>SE (Senior)</b>: Median salary is {currency_symbol}{get_stat('SE','median'):.0f}, with {get_stat('SE','count')} records.
-        - <b>EX (Executive)</b>: Median salary is {currency_symbol}{get_stat('EX','median'):.0f}, with {get_stat('EX','count')} records.
-        <br><br>
-        Senior and Executive levels show higher median and maximum salaries, while Entry-Level and Mid-Level have lower ranges. This highlights the impact of experience on salary growth in AI-related roles.
-        """, unsafe_allow_html=True)
-
+        st.write("The violin plot above shows the salary distribution for different experience levels:")
+        st.write(f"- **EN (Entry-Level)**: Median salary is {currency_symbol}{get_stat('EN','median'):,.0f}, with {get_stat('EN','count')} records.")
+        st.write(f"- **MI (Mid-Level)**: Median salary is {currency_symbol}{get_stat('MI','median'):,.0f}, with {get_stat('MI','count')} records.")
+        st.write(f"- **SE (Senior)**: Median salary is {currency_symbol}{get_stat('SE','median'):,.0f}, with {get_stat('SE','count')} records.")
+        st.write(f"- **EX (Executive)**: Median salary is {currency_symbol}{get_stat('EX','median'):,.0f}, with {get_stat('EX','count')} records.")
+        st.write("Senior and Executive levels show higher median and maximum salaries, while Entry-Level and Mid-Level have lower ranges. This highlights the impact of experience on salary growth in AI-related roles.")
 
 # ---------------- Tab 4: Average Salary by Company Size ---------------- #
 with tab4:
     st.subheader("💰 Average Salary by Company Size")
-    # --- Guidance Dropdown for Bar Plot --- #
     with st.expander("🛈 Understanding the Bar Plot", expanded=False):
         st.markdown("""
         - **Bar Height**: Taller bars mean higher average salaries for that company size.
@@ -252,7 +253,6 @@ with tab4:
         To view a bar plot, compare the height of each bar—taller bars indicate higher average salaries. Use the color gradient to distinguish between company sizes. This helps you quickly see which company size offers the best salary prospects.
         """)
     if "company_size" in df_filtered.columns:
-        # Sort company_salary by company size order: S, M, L
         company_order = ["S", "M", "L"]
         company_salary = df_filtered.groupby("company_size")["converted_salary"].mean().reindex(company_order).reset_index()
         bar_fig = px.bar(
@@ -261,20 +261,17 @@ with tab4:
             y="converted_salary",
             color="company_size",
             color_discrete_map={
-                "S": "#A7C7E7",   # Light blue for Small
-                "M": "#4682B4",   # Medium blue for Medium
-                "L": "#0D1A26"    # Dark blue for Large
+                "S": "#A7C7E7",
+                "M": "#4682B4",
+                "L": "#0D1A26"
             },
-            labels={"company_size": "Company Size", "converted_salary": f"Average Salary ({currency_type})"}
+            labels={"company_size": "Company Size", "converted_salary": f"Average Salary ({selected_currency})"}
         )
-        st.plotly_chart(bar_fig, width='stretch')
+        st.plotly_chart(bar_fig, use_container_width=True)
 
         st.markdown("<b>Company Size Salary Statistics:</b>", unsafe_allow_html=True)
         st.dataframe(company_salary)
-        CURRENCY_RATES = { "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"}, "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"}, }
-        currency_symbol = CURRENCY_RATES[currency_type]['symbol']
 
-        # Extract salary values safely in S, M, L order
         salary_S = company_salary.loc[company_salary['company_size']=='S','converted_salary'].values
         salary_M = company_salary.loc[company_salary['company_size']=='M','converted_salary'].values
         salary_L = company_salary.loc[company_salary['company_size']=='L','converted_salary'].values
@@ -291,12 +288,9 @@ with tab4:
         st.write(f"Overall, larger companies tend to offer higher pay, with the highest recorded salary reaching **{currency_symbol}{top_salary:,.0f}**.")
         st.write("Smaller companies may offer lower averages but often provide other advantages such as flexibility or broader roles.")
 
-
-
 # ---------------- Tab 5: Salary by Years of Experience & Education ---------------- #
 with tab5:
     st.subheader("📚 Salary by Years of Experience & Education")
-    # --- Guidance Dropdown for Heatmap --- #
     with st.expander("🛈 Understanding the Heatmap", expanded=False):
         st.markdown("""
         - **Color Intensity**: Stronger colors mean higher average salaries.
@@ -311,39 +305,23 @@ with tab5:
 
         heatmap_fig = px.imshow(
             heatmap_pivot,
-            color_continuous_scale="Turbo",  # Use a distinct color scale
-            labels={"x": "Years of Experience", "y": "Education Level", "color": f"Average Salary ({currency_type})"},
-            text_auto=True  # Annotate each cell with salary values
+            color_continuous_scale="Turbo",
+            labels={"x": "Years of Experience", "y": "Education Level", "color": f"Average Salary ({selected_currency})"},
+            text_auto=True
         )
         heatmap_fig.update_layout(
             title="Average Salary by Years of Experience & Education",
             xaxis_title="Years of Experience",
             yaxis_title="Education Level",
-            coloraxis_colorbar=dict(title=f"Average Salary ({currency_type})")
+            coloraxis_colorbar=dict(title=f"Average Salary ({selected_currency})")
         )
-        st.plotly_chart(heatmap_fig, width='stretch')
-
-        CURRENCY_RATES = { "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"}, "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"}, }
-        currency_symbol = CURRENCY_RATES[currency_type]['symbol']
+        st.plotly_chart(heatmap_fig, use_container_width=True)
 
         max_salary = heatmap_data['converted_salary'].max() if 'converted_salary' in heatmap_data.columns else 0
         min_salary = heatmap_data['converted_salary'].min() if 'converted_salary' in heatmap_data.columns else 0
 
-        st.write(
-            "The heatmap above shows the highest average salary for Executive-Level experience and Contract employment at",
-            f"{currency_symbol}{max_salary:,.0f}")
-        
-        st.write(
-            "This may suggest that Contract employment type is employed for certain projects and makes more frequent top-level decisions with Executive-Level positions. "
-            "On the other hand, the lowest average salary for Entry-Level experience and Part-Time employment is at",
-            f"{currency_symbol}{min_salary:,.0f}")
-
-        st.write(
-            "This may suggest that Part-Time employment type is employed for less demanding and basic workloads in which they may also be supervised at the Entry-Level position."
-        )
-
-
+        st.write(f"The heatmap above shows the highest average salary for Executive-Level experience and Contract employment at {currency_symbol}{max_salary:,.0f}.")
+        st.write(f"This may suggest that Contract employment type is employed for certain projects and makes more frequent top-level decisions with Executive-Level positions. On the other hand, the lowest average salary for Entry-Level experience and Part-Time employment is at {currency_symbol}{min_salary:,.0f}.")
+        st.write("This may suggest that Part-Time employment type is employed for less demanding and basic workloads in which they may also be supervised at the Entry-Level position.")
     else:
         st.warning("Years of experience or education level data is not available.")
-
-
