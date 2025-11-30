@@ -55,7 +55,7 @@ lottie_cert = lottie_about  # Move animation from About Us to Cert Recommendatio
 
 # -------------------- TOP BANNER --------------------
 st.image(
-	"images/banner.PNG",  # path to your local banner image
+	"images/banner.png",  # path to your local banner image
 	use_container_width=True
 )
 
