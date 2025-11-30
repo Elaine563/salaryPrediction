@@ -31,6 +31,13 @@ conversion_rate = conversion_rates[currency_type]
 if "salary_usd" in df.columns:
     df["converted_salary"] = df["salary_usd"] * conversion_rate
 
+# ---------------- Global Job Title Filter ---------------- #
+st.markdown("### 🔍 Filter by Job Title")
+job_options = ["All"] + sorted(df["job_title"].unique())
+selected_job = st.selectbox("", job_options, index=0, key="job_filter_global")
+
+df_filtered = df if selected_job == "All" else df[df["job_title"] == selected_job]
+
 # ---------------- Tabs for EDA ---------------- #
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "Employee Count & Top Skills",
@@ -43,22 +50,21 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 # ---------------- Tab 1: Employee Count & Top Skills ---------------- #
 with tab1:
     st.subheader("💡 Employee Count by Country & Top Skills")
-
-    # ---------------- Filter by Job Title ---------------- #
-    st.markdown("### 🔍 Filter by Job Title")
-    job_options = ["All"] + sorted(df["job_title"].unique())
-    selected_job = st.selectbox("", job_options, index=0, key="job_filter")
-
-    df_filtered = df if selected_job == "All" else df[df["job_title"] == selected_job]
-
     st.info(f"Displaying insights for: **{selected_job}**. Total records: {len(df_filtered)}")
-
     col_map, col_skills = st.columns([3, 1])
 
     # ---------------- Map: Count of People ---------------- #
     with col_map:
         st.markdown("#### ⚙️ Map of Employee Residence")
-
+        # --- Guidance Dropdown for Map --- #
+        with st.expander("🛈 Understanding the Map", expanded=False):
+            st.markdown("""
+            - **Color Intensity**: Darker shades indicate a higher number of employees in that country.
+            - **Hover Data**: Hover over a country to see the exact count of employees.
+            - **Interpretation**: Countries with more employees are major hubs for AI/ML talent, while lighter regions may represent emerging markets or growth opportunities.
+            
+            To view the map, look for countries shaded in darker colors—these represent regions with more employees in the selected role. Hover your mouse over a country to see the exact number of employees. Use this information to identify global hotspots and potential opportunities for your career.
+            """)
         country_counts = df_filtered.groupby("employee_residence").size().reset_index(name="count")
         map_fig = px.choropleth(
             country_counts,
@@ -81,17 +87,33 @@ with tab1:
         )
         st.plotly_chart(map_fig, width='stretch')
 
-        st.write(
-            "The map above highlights the global distribution of AI/ML employees. Countries with darker shades of red indicate a higher concentration of talent, "
-            "suggesting regions with significant AI-related activities. For example, countries like the United States and China may have a higher density of AI professionals "
-            "due to their advanced technological infrastructure and investment in AI research. Conversely, lighter shades represent regions with fewer AI professionals, "
-            "indicating potential opportunities for growth and development in the AI sector."
-        )
+        # --- Dynamic Explanation based on selected job title --- #
+        if selected_job != "All" and not country_counts.empty:
+            top_country = country_counts.sort_values("count", ascending=False).iloc[0]["employee_residence"]
+            low_country = country_counts.sort_values("count", ascending=True).iloc[0]["employee_residence"]
+            st.write(f"For the job title '{selected_job}', most employees are located in {top_country}, while the fewest are in {low_country}.")
+            st.write(f"This suggests that {top_country} is a major hub for '{selected_job}' roles, likely offering more job opportunities, professional networks, and industry resources. In contrast, {low_country} has limited representation for this role, which may indicate emerging markets, niche opportunities, or lower demand.")
+            st.write(f"If you are considering a career as a '{selected_job}', focusing your job search or professional development in countries like {top_country} may increase your chances of success. Exploring the reasons for lower demand in countries like {low_country} can also help you identify unique opportunities or areas for future growth.")
+        else:
+            st.write(
+                "The map above highlights the global distribution of AI/ML employees. Countries with darker shades of red indicate a higher concentration of talent, "
+                "suggesting regions with significant AI-related activities. For example, countries like the United States and China may have a higher density of AI professionals "
+                "due to their advanced technological infrastructure and investment in AI research. Conversely, lighter shades represent regions with fewer AI professionals, "
+                "indicating potential opportunities for growth and development in the AI sector."
+            )
 
     # ---------------- Top 10 Skills as a Ranked List ---------------- #
     with col_skills:
-        st.markdown("#### 🧠 Top 10 Skills")
-
+        st.markdown("#### Top 10 Skills")
+        # --- Guidance Dropdown for Top Skills --- #
+        with st.expander("🛈 Understanding the Top Skills List", expanded=False):
+            st.markdown("""
+            - **Ranking**: Skills are ranked by how often they appear in job postings for the selected role.
+            - **Count**: The number next to each skill shows how many jobs require it.
+            - **Interpretation**: Top-ranked skills are most in-demand for the selected job title. Consider developing these skills to improve your job prospects.
+            
+            To view the skills list, scan the ranking from top to bottom. The highest-ranked skills are most sought after for the selected job. Use this list to guide your learning and career development.
+            """)
         if "required_skills" in df_filtered.columns and len(df_filtered) > 0:
             skills_series = df_filtered["required_skills"].dropna().str.split(", ").explode()
             top_skills = skills_series.value_counts().head(10).reset_index()
@@ -105,14 +127,21 @@ with tab1:
 # ---------------- Tab 2: Job Distribution by Industry ---------------- #
 with tab2:
     st.subheader("🏭 Job Distribution by Industry")
-
     col_chart, col_text_table = st.columns([3, 2])
 
     # ---------------- Radar Chart ---------------- #
     with col_chart:
-        industry_counts = df["industry"].value_counts().reset_index()
+        # --- Guidance Dropdown for Radar Chart --- #
+        with st.expander("🛈 Understanding the Radar Chart", expanded=False):
+            st.markdown("""
+            - **Shape & Area**: Larger areas indicate industries with more job opportunities for the selected role.
+            - **Color Intensity**: Stronger colors mean higher demand.
+            - **Interpretation**: Focus on industries with larger areas for more opportunities; smaller areas may represent niche or emerging sectors.
+            
+            To view a radar chart, identify the center point from which all axes radiate, like spokes on a wheel. Each axis represents a different industry, and the scale increases as you move away from the center. Look at the nodes on each axis to see the value for that industry, then connect the nodes to see the shape of the data series and how it compares to others.
+            """)
+        industry_counts = df_filtered["industry"].value_counts().reset_index()
         industry_counts.columns = ["Industry", "Count"]
-
         if not industry_counts.empty:
             fig_industry = px.line_polar(
                 industry_counts,
@@ -134,27 +163,43 @@ with tab2:
             )
             st.plotly_chart(fig_industry, width='stretch')
 
-            st.write(
-                "The radar chart above illustrates the distribution of AI-related jobs across various industries. Industries such as Technology and Healthcare dominate the chart, "
-                "indicating their significant demand for AI professionals. This trend reflects the growing integration of AI in these sectors, where it is used to enhance operational efficiency, "
-                "drive innovation, and improve decision-making processes. Conversely, industries with smaller areas on the chart may represent emerging opportunities for AI applications, "
-                "highlighting potential areas for growth and investment."
-            )
+            # --- Dynamic Explanation based on selected job title --- #
+            if selected_job != "All" and not industry_counts.empty:
+                top_industry = industry_counts.iloc[0]["Industry"]
+                low_industry = industry_counts.iloc[-1]["Industry"]
+                st.write(f"For the job title '{selected_job}', the highest demand is in the {top_industry} industry, while the lowest is in {low_industry}.")
+                st.write(f"This means that most '{selected_job}' positions are found in the {top_industry} sector, which may offer more opportunities, resources, and career growth for this role. On the other hand, the {low_industry} industry has the fewest positions for '{selected_job}', indicating limited demand or specialized requirements in that sector.")
+                st.write(f"If you are pursuing a career as a '{selected_job}', consider focusing your job search, networking, and skill development in industries with higher demand such as {top_industry}. Exploring the reasons behind lower demand in industries like {low_industry} can also help you identify niche opportunities or areas for future growth.")
+            else:
+                st.write(
+                    "The radar chart above illustrates the distribution of AI-related jobs across various industries. Industries such as Technology and Healthcare dominate the chart, "
+                    "indicating their significant demand for AI professionals. This trend reflects the growing integration of AI in these sectors, where it is used to enhance operational efficiency, "
+                    "drive innovation, and improve decision-making processes. Conversely, industries with smaller areas on the chart may represent emerging opportunities for AI applications, "
+                    "highlighting potential areas for growth and investment."
+                )
         else:
             st.warning("⚠️ No industry data available for this selection.")
 
 # ---------------- Tab 3: Salary Distribution by Experience Level ---------------- #
 with tab3:
     st.subheader("📊 Salary Distribution by Experience Level")
-
-    if "experience_level" in df.columns:
+    # --- Guidance Dropdown for Violin Plot --- #
+    with st.expander("🛈 Understanding the Violin Plot", expanded=False):
+        st.markdown("""
+        - **Shape**: Wider sections show where most salaries fall for each experience level.
+        - **Box & Points**: The box shows the interquartile range; points show individual salaries.
+        - **Interpretation**: Compare salary ranges and medians across experience levels to understand growth potential.
+        
+        To view a violin plot, look for the width of each section—wider areas mean more data points at that salary range. The box in the center shows the middle 50% of salaries, and the dots represent individual salaries. Compare the shapes across experience levels to see how salary distributions differ.
+        """)
+    if "experience_level" in df_filtered.columns:
         # Ensure the DataFrame is sorted by experience level in the desired order before plotting
         experience_order = ["EN", "MI", "SE", "EX"]
-        df_sorted = df.copy()
-        df_sorted["experience_level"] = pd.Categorical(df_sorted["experience_level"], categories=experience_order, ordered=True)
-        df_sorted = df_sorted.sort_values("experience_level")
+        df_exp = df_filtered.copy()
+        df_exp["experience_level"] = pd.Categorical(df_exp["experience_level"], categories=experience_order, ordered=True)
+        df_exp = df_exp.sort_values("experience_level")
         violin_fig = px.violin(
-            df_sorted,
+            df_exp,
             x="experience_level",
             y="converted_salary",
             box=True,
@@ -164,8 +209,9 @@ with tab3:
             labels={"experience_level": "Experience Level", "converted_salary": f"Salary ({currency_type})"}
         )
         st.plotly_chart(violin_fig, width='stretch')
-        
-        exp_stats = df.groupby("experience_level")['converted_salary'].agg(['count','mean','median','min','max']).reset_index()
+
+        # --- Enhanced Explanation with Statistics --- #
+        exp_stats = df_exp.groupby("experience_level")['converted_salary'].agg(['count','mean','median','min','max']).reset_index()
         st.markdown("<b>Statistics by Experience Level:</b>", unsafe_allow_html=True)
         st.dataframe(exp_stats)
 
@@ -196,20 +242,28 @@ with tab3:
 # ---------------- Tab 4: Average Salary by Company Size ---------------- #
 with tab4:
     st.subheader("💰 Average Salary by Company Size")
-
-    if "company_size" in df.columns:
-        # Sort company_salary by company size 
+    # --- Guidance Dropdown for Bar Plot --- #
+    with st.expander("🛈 Understanding the Bar Plot", expanded=False):
+        st.markdown("""
+        - **Bar Height**: Taller bars mean higher average salaries for that company size.
+        - **Color Gradient**: Colors represent company size (light for small, dark for large).
+        - **Interpretation**: Use this to compare salary expectations across company sizes.
+        
+        To view a bar plot, compare the height of each bar—taller bars indicate higher average salaries. Use the color gradient to distinguish between company sizes. This helps you quickly see which company size offers the best salary prospects.
+        """)
+    if "company_size" in df_filtered.columns:
+        # Sort company_salary by company size order: S, M, L
         company_order = ["S", "M", "L"]
-        company_salary = df.groupby("company_size")["converted_salary"].mean().reindex(company_order).reset_index()
+        company_salary = df_filtered.groupby("company_size")["converted_salary"].mean().reindex(company_order).reset_index()
         bar_fig = px.bar(
             company_salary,
             x="company_size",
             y="converted_salary",
             color="company_size",
             color_discrete_map={
-                "S": "#A7C7E7",  
-                "M": "#4682B4",   
-                "L": "#0D1A26"    
+                "S": "#A7C7E7",   # Light blue for Small
+                "M": "#4682B4",   # Medium blue for Medium
+                "L": "#0D1A26"    # Dark blue for Large
             },
             labels={"company_size": "Company Size", "converted_salary": f"Average Salary ({currency_type})"}
         )
@@ -220,7 +274,7 @@ with tab4:
         CURRENCY_RATES = { "USD": {"symbol": "$", "rate": 1.0, "name": "US Dollar"}, "MYR": {"symbol": "RM", "rate": 4.13, "name": "Malaysian Ringgit"}, }
         currency_symbol = CURRENCY_RATES[currency_type]['symbol']
 
-        # Extract salary values 
+        # Extract salary values safely in S, M, L order
         salary_S = company_salary.loc[company_salary['company_size']=='S','converted_salary'].values
         salary_M = company_salary.loc[company_salary['company_size']=='M','converted_salary'].values
         salary_L = company_salary.loc[company_salary['company_size']=='L','converted_salary'].values
@@ -237,12 +291,22 @@ with tab4:
         st.write(f"Overall, larger companies tend to offer higher pay, with the highest recorded salary reaching **{currency_symbol}{top_salary:,.0f}**.")
         st.write("Smaller companies may offer lower averages but often provide other advantages such as flexibility or broader roles.")
 
+
+
 # ---------------- Tab 5: Salary by Years of Experience & Education ---------------- #
 with tab5:
     st.subheader("📚 Salary by Years of Experience & Education")
-
-    if "years_experience" in df.columns and "education_required" in df.columns:
-        heatmap_data = df.groupby(["years_experience", "education_required"])["converted_salary"].mean().reset_index()
+    # --- Guidance Dropdown for Heatmap --- #
+    with st.expander("🛈 Understanding the Heatmap", expanded=False):
+        st.markdown("""
+        - **Color Intensity**: Stronger colors mean higher average salaries.
+        - **Axes**: Rows show education level, columns show years of experience.
+        - **Interpretation**: Find combinations of education and experience that lead to higher salaries.
+        
+        To view a heatmap, look for the cells with the strongest colors—these represent the highest average salaries. Read across rows to compare education levels and down columns to compare years of experience. Use this to identify the best combinations for salary growth.
+        """)
+    if "years_experience" in df_filtered.columns and "education_required" in df_filtered.columns:
+        heatmap_data = df_filtered.groupby(["years_experience", "education_required"])["converted_salary"].mean().reset_index()
         heatmap_pivot = heatmap_data.pivot(index="education_required", columns="years_experience", values="converted_salary")
 
         heatmap_fig = px.imshow(
