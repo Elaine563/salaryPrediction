@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import pickle
-from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import joblib
 import os
@@ -16,7 +15,7 @@ st.set_page_config(
     layout="wide"
 )
 
-df = pd.read_csv("ai_job_dataset.csv")  
+df = pd.read_csv("ai_job_dataset.csv")
 df.columns = df.columns.str.lower().str.strip()
 
 # ==================== CURRENCY CONVERSION RATES ==================== #
@@ -42,83 +41,83 @@ USD_TO_MYR = 4.13
 
 SKILL_CERTIFICATIONS = {
     "Python": [
-        {"name": "Python for Everybody (Coursera)", "duration": "4 weeks", "fee_usd": 49, 
+        {"name": "Python for Everybody (Coursera)", "duration": "4 weeks", "fee_usd": 49,
          "link": "https://www.coursera.org/specializations/python", "impact": "Foundation", "salary_boost": 5000},
-        {"name": "AWS Machine Learning Specialty", "duration": "6 weeks", "fee_usd": 300, 
+        {"name": "AWS Machine Learning Specialty", "duration": "6 weeks", "fee_usd": 300,
          "link": "https://aws.amazon.com/certification/certified-machine-learning-specialty/", "impact": "High", "salary_boost": 15000}
     ],
     "Machine Learning": [
-        {"name": "Machine Learning by Andrew Ng", "duration": "11 weeks", "fee_usd": 0, 
+        {"name": "Machine Learning by Andrew Ng", "duration": "11 weeks", "fee_usd": 0,
          "link": "https://www.coursera.org/learn/machine-learning", "impact": "High", "salary_boost": 20000},
-        {"name": "TensorFlow Developer Certificate", "duration": "8 weeks", "fee_usd": 100, 
+        {"name": "TensorFlow Developer Certificate", "duration": "8 weeks", "fee_usd": 100,
          "link": "https://www.tensorflow.org/certificate", "impact": "Medium", "salary_boost": 12000}
     ],
     "NLP": [
-        {"name": "Natural Language Processing Specialization", "duration": "6 weeks", "fee_usd": 79, 
+        {"name": "Natural Language Processing Specialization", "duration": "6 weeks", "fee_usd": 79,
          "link": "https://www.coursera.org/specializations/natural-language-processing", "impact": "High", "salary_boost": 18000}
     ],
     "Deep Learning": [
-        {"name": "Deep Learning Specialization (Coursera)", "duration": "12 weeks", "fee_usd": 49, 
+        {"name": "Deep Learning Specialization (Coursera)", "duration": "12 weeks", "fee_usd": 49,
          "link": "https://www.coursera.org/specializations/deep-learning", "impact": "High", "salary_boost": 22000}
     ],
     "Data Analysis": [
-        {"name": "Google Data Analytics Certificate", "duration": "6 months", "fee_usd": 0, 
+        {"name": "Google Data Analytics Certificate", "duration": "6 months", "fee_usd": 0,
          "link": "https://grow.google/certificates/data-analytics/", "impact": "Foundation", "salary_boost": 8000}
     ],
     "AWS": [
-        {"name": "AWS Certified Solutions Architect", "duration": "8 weeks", "fee_usd": 150, 
+        {"name": "AWS Certified Solutions Architect", "duration": "8 weeks", "fee_usd": 150,
          "link": "https://aws.amazon.com/certification/", "impact": "High", "salary_boost": 16000}
     ],
     "Docker": [
-        {"name": "Docker Mastery (Udemy)", "duration": "4 weeks", "fee_usd": 15, 
+        {"name": "Docker Mastery (Udemy)", "duration": "4 weeks", "fee_usd": 15,
          "link": "https://www.udemy.com/course/docker-mastery/", "impact": "Medium", "salary_boost": 8000}
     ],
     "Kubernetes": [
-        {"name": "Certified Kubernetes Administrator (CKA)", "duration": "6 weeks", "fee_usd": 395, 
+        {"name": "Certified Kubernetes Administrator (CKA)", "duration": "6 weeks", "fee_usd": 395,
          "link": "https://www.cncf.io/certification/cka/", "impact": "High", "salary_boost": 17000}
     ],
     "SQL": [
-        {"name": "SQL for Data Science (Coursera)", "duration": "4 weeks", "fee_usd": 49, 
+        {"name": "SQL for Data Science (Coursera)", "duration": "4 weeks", "fee_usd": 49,
          "link": "https://www.coursera.org/learn/sql-for-data-science", "impact": "Foundation", "salary_boost": 6000}
     ],
     "Tableau": [
-        {"name": "Tableau Desktop Specialist Certification", "duration": "3 weeks", "fee_usd": 100, 
+        {"name": "Tableau Desktop Specialist Certification", "duration": "3 weeks", "fee_usd": 100,
          "link": "https://www.tableau.com/learn/certification", "impact": "Medium", "salary_boost": 9000}
     ],
     "PyTorch": [
-        {"name": "PyTorch for Deep Learning (Udacity)", "duration": "8 weeks", "fee_usd": 0, 
+        {"name": "PyTorch for Deep Learning (Udacity)", "duration": "8 weeks", "fee_usd": 0,
          "link": "https://www.udacity.com/course/deep-learning-pytorch--ud188", "impact": "High", "salary_boost": 15000}
     ],
     "Linux": [
-        {"name": "Linux Foundation Certified System Administrator", "duration": "6 weeks", "fee_usd": 300, 
+        {"name": "Linux Foundation Certified System Administrator", "duration": "6 weeks", "fee_usd": 300,
          "link": "https://training.linuxfoundation.org/certification/", "impact": "Medium", "salary_boost": 10000}
     ],
     "Hadoop": [
-        {"name": "Cloudera Certified Data Engineer", "duration": "10 weeks", "fee_usd": 400, 
+        {"name": "Cloudera Certified Data Engineer", "duration": "10 weeks", "fee_usd": 400,
          "link": "https://www.cloudera.com/about/training/certification.html", "impact": "High", "salary_boost": 18000}
     ],
     "Scala": [
-        {"name": "Scala Programming Specialization", "duration": "7 weeks", "fee_usd": 79, 
+        {"name": "Scala Programming Specialization", "duration": "7 weeks", "fee_usd": 79,
          "link": "https://www.coursera.org/specializations/scala", "impact": "Medium", "salary_boost": 12000}
     ],
     "Java": [
-        {"name": "Oracle Certified Java Programmer", "duration": "8 weeks", "fee_usd": 245, 
+        {"name": "Oracle Certified Java Programmer", "duration": "8 weeks", "fee_usd": 245,
          "link": "https://education.oracle.com/java-se-11-developer", "impact": "Medium", "salary_boost": 11000}
     ],
     "Mathematics": [
-        {"name": "Mathematics for Machine Learning Specialization", "duration": "10 weeks", "fee_usd": 49, 
+        {"name": "Mathematics for Machine Learning Specialization", "duration": "10 weeks", "fee_usd": 49,
          "link": "https://www.coursera.org/specializations/mathematics-machine-learning", "impact": "Foundation", "salary_boost": 7000}
     ]
 }
 
 # ==================== ORIGINAL SALARY PREDICTION CODE (UNTOUCHED) ==================== #
-header_col1, header_col2 = st.columns([3, 1.2]) 
+header_col1, header_col2 = st.columns([3, 1.2])
 
 with header_col1:
     st.title("🌍 AI/ML Annual Salary Prediction Dashboard")
     st.write("""
-Welcome to the **Annual Salary Prediction Dashboard**!  
-This dashboard uses a **CatBoost Machine Learning model** trained on real job market data  
+Welcome to the **Annual Salary Prediction Dashboard**!
+This dashboard uses a **CatBoost Machine Learning model** trained on real job market data
 to **predict annual salaries** based on job role, experience, and company profile.
 
 Use this tool to:
@@ -128,7 +127,7 @@ Use this tool to:
 """)
 
 with header_col2:
-    st.image("ai.png", width=350) 
+    st.image("ai.png", width=350)
 
 # ==================== CURRENCY SELECTOR ==================== #
 st.sidebar.header("💱 Currency Settings")
@@ -145,7 +144,7 @@ currency_rate = CURRENCY_RATES[selected_currency]['rate']
 
 st.sidebar.info(f"**Exchange Rate:** 1 USD = {currency_rate} {selected_currency}")
 st.sidebar.caption("💡 All predictions are calculated in USD and converted to your selected currency.")
-    
+
 st.info(f"💡 *All salary values are predicted in USD and displayed in {selected_currency} ({currency_symbol}).*")
 
 st.divider()
@@ -178,10 +177,10 @@ years_experience = st.slider("Years of Experience", 0, 30, 3)
 
 st.divider()
 
-# ==================== ENCODING FUNCTION ==================== #
-def encode_input(job_title, experience_level, employment_type,
-                 company_location, company_size,
-                 education_required, years_experience):
+# ==================== PREPARE INPUT FUNCTION ==================== #
+def prepare_input(job_title, experience_level, employment_type,
+                  company_location, company_size,
+                  education_required, years_experience):
 
     input_data = pd.DataFrame({
         "job_title": [job_title],
@@ -192,16 +191,6 @@ def encode_input(job_title, experience_level, employment_type,
         "education_required": [education_required],
         "years_experience": [years_experience]
     })
-
-    for col in input_data.columns:
-        if input_data[col].dtype == "object":
-            if col in label_encoders:
-                le = label_encoders[col]
-                input_data[col] = input_data[col].apply(lambda x: x if x in le.classes_ else le.classes_[0])
-                input_data[col] = le.transform(input_data[col])
-            else:
-                le = LabelEncoder()
-                input_data[col] = le.fit_transform(input_data[col])
 
     return input_data
 
@@ -215,8 +204,9 @@ try:
     with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
 
-    # load encoders (use joblib if saved with joblib)
-    label_encoders = joblib.load(ENCODER_PATH)
+    # optional: keep this loaded if other parts depend on it later
+    if os.path.exists(ENCODER_PATH):
+        label_encoders = joblib.load(ENCODER_PATH)
 
 except Exception as e:
     st.error(f"❌ Model or Label Encoder missing!\nCheck files in folder {BASE_DIR}\nError: {e}")
@@ -229,27 +219,32 @@ if st.button("Predict Salary"):
         st.warning("⚠️ Please select at least Job Title.")
     else:
         try:
-            # ✅ Convert UI labels → dataset labels using pandas Series replace()
+            # ✅ Convert UI labels → dataset labels
             company_size_converted = pd.Series([company_size]).replace({"Small": "S", "Medium": "M", "Large": "L"}).iloc[0]
             employment_type_converted = pd.Series([employment_type]).replace({"Full Time": "FT", "Part Time": "PT", "Contract": "CT", "Freelance": "FL"}).iloc[0]
             experience_level_converted = pd.Series([experience_level]).replace({"Entry Level": "EN", "Mid Level": "MI", "Senior Level": "SE", "Executive": "EX"}).iloc[0]
 
-            input_encoded = encode_input(
-                job_title, experience_level_converted, employment_type_converted,
-                company_location, company_size_converted, education_required, years_experience
+            input_data = prepare_input(
+                job_title,
+                experience_level_converted,
+                employment_type_converted,
+                company_location,
+                company_size_converted,
+                education_required,
+                years_experience
             )
 
             # ✅ Predict (log scale → convert back)
-            prediction_log = model.predict(input_encoded)[0]
+            prediction_log = model.predict(input_data)[0]
             salary_pred_usd = float(np.expm1(prediction_log))
 
             # ✅ Display results
             salary_converted = salary_pred_usd * currency_rate
             st.success(f"Predicted Annual Salary: **{currency_symbol}{salary_converted:,.2f} {selected_currency}**")
-            
+
             if selected_currency != 'USD':
                 st.info(f"💵 Equivalent in USD: **${salary_pred_usd:,.2f} USD**")
-            
+
             # Store in session state for new features
             st.session_state['predicted_salary'] = salary_pred_usd
             st.session_state['job_title'] = job_title
@@ -268,13 +263,13 @@ st.divider()
 st.subheader("Model Performance")
 
 st.write("""
-This prediction model is powered by **CatBoost Regressor**,  
+This prediction model is powered by **CatBoost Regressor**,
 which handles categorical job attributes efficiently and provides high-accuracy results.
 
 ### Performance Metrics (Log Scale)
-- **MSE:** 0.019985  
-- **RMSE:** 0.141369  
-- **R² Score:** 0.918697  
+- **MSE:** 0.019985
+- **RMSE:** 0.141369
+- **R² Score:** 0.918697
 
 *The model captures over 91% of salary variance — strong predictive accuracy!*
 """)
@@ -287,21 +282,21 @@ st.caption("Predictions are estimates based on historical trends and may vary ba
 if 'predicted_salary' in st.session_state:
     st.markdown("---")
     st.markdown("## What's Next? Your Career Growth Path")
-    
+
     predicted_salary = st.session_state['predicted_salary']
     job_title_selected = st.session_state['job_title']
-    
+
     # ==================== SECTION 1: MARKET COMPARISON ==================== #
     st.subheader("How Does Your Salary Compare to the Market?")
-    
+
     job_market_data = df[df['job_title'] == job_title_selected]['salary_usd'].dropna()
-    
+
     if not job_market_data.empty:
         avg_market = job_market_data.mean()
         min_market = job_market_data.min()
         max_market = job_market_data.max()
         percentile = (job_market_data < predicted_salary).sum() / len(job_market_data) * 100
-        
+
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("Your Monthly Salary", f"{currency_symbol} {(predicted_salary * currency_rate / 12):,.0f}")
@@ -309,16 +304,16 @@ if 'predicted_salary' in st.session_state:
             diff = predicted_salary - avg_market
             st.metric("vs Market Avg", f"{currency_symbol} {(avg_market * currency_rate / 12):,.0f}", f"{currency_symbol} {(diff * currency_rate / 12):+,.0f}")
         with col3:
-            st.metric("Your Percentile", f"{percentile:.0f}th", 
+            st.metric("Your Percentile", f"{percentile:.0f}th",
                      "Above Avg" if percentile > 50 else "Below Avg")
-        
+
         # Salary distribution visualization
         fig_dist = go.Figure()
-        
+
         # Convert salaries to selected currency monthly for display
         job_market_data_converted = (job_market_data * currency_rate) / 12
         predicted_salary_converted = (predicted_salary * currency_rate) / 12
-        
+
         fig_dist.add_trace(go.Histogram(
             x=job_market_data_converted,
             name='Market Salaries',
@@ -327,8 +322,8 @@ if 'predicted_salary' in st.session_state:
             nbinsx=20
         ))
         fig_dist.add_vline(
-            x=predicted_salary_converted, 
-            line_dash="dash", 
+            x=predicted_salary_converted,
+            line_dash="dash",
             line_color="red",
             line_width=3,
             annotation_text=f"Your Salary: {currency_symbol} {predicted_salary_converted:,.0f}",
@@ -342,13 +337,12 @@ if 'predicted_salary' in st.session_state:
             height=400
         )
         st.plotly_chart(fig_dist, use_container_width=True)
-    
+
     st.divider()
-    
+
     # ==================== SECTION 2: SKILLS GAP & CERTIFICATIONS ==================== #
     st.subheader("Boost Your Salary with Certifications")
-    
-    # ROI Analysis Description
+
     with st.expander("ℹ️ **How to Use the ROI Analysis - Understanding Your Investment Value**", expanded=False):
         st.markdown("""
         ### Making Smart Decisions
@@ -356,35 +350,31 @@ if 'predicted_salary' in st.session_state:
         You will also see a summary of your total course cost, your estimated monthly salary increase, your potential new monthly salary, and the combined ROI of all selected courses.
 
         ### How to Use This
-        Use the analysis to pick courses that offer strong career benefits at a reasonable price. Start with high-impact, affordable options and build from there. 
-        
+        Use the analysis to pick courses that offer strong career benefits at a reasonable price. Start with high-impact, affordable options and build from there.
+
         **Remember**: These are market-based estimates. Actual results depend on your skills, job market, and how you apply your knowledge!
         """)
-    
+
     st.write("Based on your job role, here are skills that can increase your earning potential:")
-    
-    # Get required skills for the job
+
     job_skills_data = df[df['job_title'] == job_title_selected]
-    
+
     if 'required_skills' in df.columns and not job_skills_data.empty:
         skills_series = job_skills_data['required_skills'].dropna().str.split(',').explode().str.strip()
         skills_count = skills_series.value_counts().head(10)
-        
-        # Let user select known skills
+
         st.markdown("#### Select Skills You Already Have:")
         known_skills = st.multiselect(
             "Check the skills you're proficient in:",
             skills_count.index.tolist(),
             key="known_skills_cert"
         )
-        
-        # Identify missing skills
+
         missing_skills = [skill for skill in skills_count.index if skill not in known_skills]
-        
+
         if missing_skills:
             st.markdown(f"#### Skills to Develop ({len(missing_skills)} identified):")
-            
-            # Build recommendation list
+
             recommendations = []
             for skill in missing_skills:
                 if skill in SKILL_CERTIFICATIONS:
@@ -401,12 +391,11 @@ if 'predicted_salary' in st.session_state:
                             "ROI": roi_value,
                             "Link": course["link"]
                         })
-            
+
             if recommendations:
                 rec_df = pd.DataFrame(recommendations)
                 rec_df = rec_df.sort_values("ROI", ascending=False)
-                
-                # ROI Bubble Chart
+
                 fig_roi = px.scatter(
                     rec_df,
                     x="Fee (Local)",
@@ -420,12 +409,11 @@ if 'predicted_salary' in st.session_state:
                 )
                 fig_roi.update_layout(height=500)
                 st.plotly_chart(fig_roi, use_container_width=True)
-                
-                # Investment Summary
+
                 total_investment = rec_df['Fee (USD)'].sum()
                 total_boost = rec_df['Salary Boost'].sum()
                 new_potential_salary = predicted_salary + total_boost
-                
+
                 st.markdown("### Investment Summary")
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
@@ -438,10 +426,9 @@ if 'predicted_salary' in st.session_state:
                     overall_roi = total_boost / total_investment if total_investment > 0 else 999999
                     roi_display = f"{overall_roi:.1f}x" if overall_roi < 999999 else "Unlimited"
                     st.metric("Overall ROI", roi_display)
-                
-                # Detailed Course Table
+
                 st.markdown("### Recommended Courses (Sorted by ROI)")
-                
+
                 for idx, row in rec_df.head(10).iterrows():
                     impact_icon = 'High' if row['Impact'] == 'High' else 'Medium' if row['Impact'] == 'Medium' else 'Foundation'
                     with st.expander(f"[{impact_icon}] **{row['Skill']}** - {row['Course']}"):
@@ -456,17 +443,16 @@ if 'predicted_salary' in st.session_state:
                         with col4:
                             roi_text = f"{row['ROI']:.1f}x" if row['ROI'] < 999999 else "Unlimited"
                             st.markdown(f"**ROI:** {roi_text}")
-                        
+
                         st.markdown(f"**[Enroll Now]({row['Link']})**")
-                
-                # PDF Download
+
                 def generate_career_pdf(rec_df, job_title, current_salary, potential_salary):
                     pdf = FPDF()
                     pdf.add_page()
                     pdf.set_font("Arial", 'B', 18)
                     pdf.cell(0, 10, "Career Growth Plan", ln=True, align='C')
                     pdf.ln(5)
-                    
+
                     pdf.set_font("Arial", '', 12)
                     pdf.cell(0, 8, f"Job Title: {job_title}", ln=True)
                     pdf.cell(0, 8, f"Current Monthly Salary: {currency_symbol} {(current_salary * currency_rate / 12):,.0f} {selected_currency}", ln=True)
@@ -474,26 +460,26 @@ if 'predicted_salary' in st.session_state:
                     increase_pct = ((potential_salary - current_salary) / current_salary * 100)
                     pdf.cell(0, 8, f"Potential Monthly Increase: {currency_symbol} {((potential_salary - current_salary) * currency_rate / 12):,.0f} ({increase_pct:.1f}%)", ln=True)
                     pdf.ln(10)
-                    
+
                     pdf.set_font("Arial", 'B', 14)
                     pdf.cell(0, 10, "Recommended Certifications", ln=True)
                     pdf.ln(5)
-                    
+
                     pdf.set_font("Arial", '', 10)
                     for _, row in rec_df.iterrows():
-                        pdf.multi_cell(0, 6, 
+                        pdf.multi_cell(0, 6,
                             f"Skill: {row['Skill']}\n" +
                             f"Course: {row['Course']}\n" +
                             f"Duration: {row['Duration']} | Fee: {currency_symbol} {row['Fee (Local)']:.0f} | Impact: {row['Impact']}\n" +
                             f"Monthly Salary Boost: +{currency_symbol} {(row['Salary Boost'] * currency_rate / 12):,.0f}\n" +
                             f"Link: {row['Link']}\n")
                         pdf.ln(3)
-                    
+
                     pdf_bytes = BytesIO()
                     pdf.output(pdf_bytes)
                     pdf_bytes.seek(0)
                     return pdf_bytes
-                
+
                 pdf_data = generate_career_pdf(rec_df, job_title_selected, predicted_salary, new_potential_salary)
                 st.download_button(
                     label="Download Complete Career Plan (PDF)",
@@ -505,99 +491,91 @@ if 'predicted_salary' in st.session_state:
                 st.info("Certifications for these skills are being updated. Check back soon!")
         else:
             st.success("Amazing! You have all the top skills for this role!")
-    
+
     st.divider()
-    
-# ==================== SECTION 3: REALISTIC NEXT STEP COMPANIES ==================== #
+
+    # ==================== SECTION 3: REALISTIC NEXT STEP COMPANIES ==================== #
     st.subheader(f"Target Companies for Your Next Career Move (Monthly Salary in {selected_currency})")
     st.write(f"Companies offering salaries **5-30% higher** than your predicted salary for **{job_title_selected}** - realistic next steps:")
-    
-    # Get companies with salaries close to but higher than prediction
+
     if 'company_name' in df.columns:
         job_companies = df[df['job_title'] == job_title_selected][['company_name', 'salary_usd', 'company_location', 'company_size']].dropna()
-        
+
         if not job_companies.empty:
-            # Filter companies with salary 5-30% higher than predicted
-            lower_bound = predicted_salary * 1.05  # 5% higher
-            upper_bound = predicted_salary * 1.30  # 30% higher
-        
-        realistic_companies = job_companies[
-            (job_companies['salary_usd'] >= lower_bound) & 
-            (job_companies['salary_usd'] <= upper_bound)
-        ]
-        
-        # If not enough companies in range, expand the range
-        if len(realistic_companies) < 5:
-            lower_bound = predicted_salary * 1.00  # Same level
-            upper_bound = predicted_salary * 1.50  # Up to 50% higher
+            lower_bound = predicted_salary * 1.05
+            upper_bound = predicted_salary * 1.30
+
             realistic_companies = job_companies[
-                (job_companies['salary_usd'] >= lower_bound) & 
+                (job_companies['salary_usd'] >= lower_bound) &
                 (job_companies['salary_usd'] <= upper_bound)
             ]
-        
-        # Get top 10 from this filtered set
-        top_companies = realistic_companies.nlargest(10, 'salary_usd')
-        
-        if not top_companies.empty:
-            # Convert to selected currency monthly for display
-            top_companies_display = top_companies.copy()
-            top_companies_display['monthly_salary_local'] = (top_companies_display['salary_usd'] * currency_rate) / 12
-            top_companies_display['increase_pct'] = ((top_companies_display['salary_usd'] - predicted_salary) / predicted_salary * 100)
-            
-            # compute monthly values first
-            pred_month = predicted_salary * currency_rate / 12
-            low_month = lower_bound * currency_rate / 12
-            high_month = upper_bound * currency_rate / 12
 
-            # format as currency strings
-            formatted_pred = f"{currency_symbol}{pred_month:,.0f}"
-            formatted_low = f"{currency_symbol}{low_month:,.0f}"
-            formatted_high = f"{currency_symbol}{high_month:,.0f}"
+            if len(realistic_companies) < 5:
+                lower_bound = predicted_salary * 1.00
+                upper_bound = predicted_salary * 1.50
+                realistic_companies = job_companies[
+                    (job_companies['salary_usd'] >= lower_bound) &
+                    (job_companies['salary_usd'] <= upper_bound)
+                ]
 
-            # display message (multi-line for readability)
-            st.info(
-                f"Your current monthly salary prediction: " 
-                f"{formatted_pred}" 
-            )
-            st.info(
-                f"Showing companies offering monthly salary: "
-                f"{formatted_low}  -  {formatted_high}"
-            )
+            top_companies = realistic_companies.nlargest(10, 'salary_usd')
 
-            # Bar chart of target companies
-            fig_companies = px.bar(
-                top_companies_display,
-                x='monthly_salary_local',
-                y='company_name',
-                orientation='h',
-                color='increase_pct',
-                hover_data=['company_location', 'increase_pct'],
-                title=f"Realistic Target Companies for {job_title_selected} (Monthly Salary in {selected_currency})",
-                labels={'monthly_salary_local': f'Monthly Salary ({selected_currency})', 'company_name': 'Company', 'increase_pct': 'Increase %'},
-                color_continuous_scale='Greens'
-            )
-            fig_companies.update_layout(height=500, showlegend=True)
-            st.plotly_chart(fig_companies, use_container_width=True)
-            
-            # Table view
-            st.markdown("### Detailed Company Information")
-            display_companies = top_companies_display.copy()
-            display_companies['salary_display'] = display_companies['monthly_salary_local'].apply(lambda x: f"{currency_symbol} {x:,.0f}")
-            display_companies['increase_display'] = display_companies['increase_pct'].apply(lambda x: f"+{x:.1f}%")
-            display_companies['company_size'] = display_companies['company_size'].replace({'S': 'Small', 'M': 'Medium', 'L': 'Large'})
-            display_companies = display_companies[['company_name', 'salary_display', 'increase_display', 'company_location', 'company_size']]
-            display_companies = display_companies.rename(columns={
-                'company_name': 'Company',
-                'salary_display': f'Monthly Salary ({selected_currency})',
-                'increase_display': 'Salary Increase',
-                'company_location': 'Location',
-                'company_size': 'Size'
-            })
-            st.dataframe(display_companies, use_container_width=True, hide_index=True)
+            if not top_companies.empty:
+                top_companies_display = top_companies.copy()
+                top_companies_display['monthly_salary_local'] = (top_companies_display['salary_usd'] * currency_rate) / 12
+                top_companies_display['increase_pct'] = ((top_companies_display['salary_usd'] - predicted_salary) / predicted_salary * 100)
+
+                pred_month = predicted_salary * currency_rate / 12
+                low_month = lower_bound * currency_rate / 12
+                high_month = upper_bound * currency_rate / 12
+
+                formatted_pred = f"{currency_symbol}{pred_month:,.0f}"
+                formatted_low = f"{currency_symbol}{low_month:,.0f}"
+                formatted_high = f"{currency_symbol}{high_month:,.0f}"
+
+                st.info(
+                    f"Your current monthly salary prediction: "
+                    f"{formatted_pred}"
+                )
+                st.info(
+                    f"Showing companies offering monthly salary: "
+                    f"{formatted_low}  -  {formatted_high}"
+                )
+
+                fig_companies = px.bar(
+                    top_companies_display,
+                    x='monthly_salary_local',
+                    y='company_name',
+                    orientation='h',
+                    color='increase_pct',
+                    hover_data=['company_location', 'increase_pct'],
+                    title=f"Realistic Target Companies for {job_title_selected} (Monthly Salary in {selected_currency})",
+                    labels={'monthly_salary_local': f'Monthly Salary ({selected_currency})', 'company_name': 'Company', 'increase_pct': 'Increase %'},
+                    color_continuous_scale='Greens'
+                )
+                fig_companies.update_layout(height=500, showlegend=True)
+                st.plotly_chart(fig_companies, use_container_width=True)
+
+                st.markdown("### Detailed Company Information")
+                display_companies = top_companies_display.copy()
+                display_companies['salary_display'] = display_companies['monthly_salary_local'].apply(lambda x: f"{currency_symbol} {x:,.0f}")
+                display_companies['increase_display'] = display_companies['increase_pct'].apply(lambda x: f"+{x:.1f}%")
+                display_companies['company_size'] = display_companies['company_size'].replace({'S': 'Small', 'M': 'Medium', 'L': 'Large'})
+                display_companies = display_companies[['company_name', 'salary_display', 'increase_display', 'company_location', 'company_size']]
+                display_companies = display_companies.rename(columns={
+                    'company_name': 'Company',
+                    'salary_display': f'Monthly Salary ({selected_currency})',
+                    'increase_display': 'Salary Increase',
+                    'company_location': 'Location',
+                    'company_size': 'Size'
+                })
+                st.dataframe(display_companies, use_container_width=True, hide_index=True)
+            else:
+                st.warning("No companies found in the realistic salary range. Consider upskilling to reach higher salary brackets!")
         else:
-            st.warning("No companies found in the realistic salary range. Consider upskilling to reach higher salary brackets!")
+            st.info("No company data available for this role.")
     else:
-        st.info("No company data available for this role.")
+        st.info("Company information not available in dataset.")
 else:
     st.info("Company information not available in dataset.")
 
