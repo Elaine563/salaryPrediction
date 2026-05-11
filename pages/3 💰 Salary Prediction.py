@@ -234,6 +234,15 @@ if st.button("Predict Salary"):
                 years_experience
             )
 
+            # ✅ Encode categorical features using loaded label encoders
+            categorical_columns = ['job_title', 'experience_level', 'employment_type', 
+                                   'company_location', 'company_size', 'education_required']
+            
+            for col in categorical_columns:
+                if col in label_encoders:
+                    input_data[col] = label_encoders[col].transform(input_data[col])
+
+
             # ✅ Predict (log scale → convert back)
             prediction_log = model.predict(input_data)[0]
             salary_pred_usd = float(np.expm1(prediction_log))
